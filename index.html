@@ -128,10 +128,11 @@
         
         .accordion-item.active .accordion-content {
             padding: 20px;
-            max-height: 800px; /* Valeur arbitraire grande pour permettre l'ouverture */
+            max-height: 1200px; /* Augmenté pour les graphes */
         }
 
         .highlight-dep { background-color: #e0e6ed; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #c0392b; }
+        .highlight-year { background-color: #fce4ec; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #2980b9; }
 
         .mini-charts-wrapper { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;}
         .mini-chart-card { flex: 1; min-width: 250px; max-width: 400px; background: #fff; border-radius: 8px; padding: 10px; border: 1px solid #dcdde1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
@@ -202,7 +203,7 @@
         </div>
 
         <div id="did-you-know-section">
-            <h2 class="dyk-header">💡 Le saviez-vous ?</h2>
+            <h2 class="dyk-header">Informations supplémentaires</h2>
             
             <div class="accordion-item">
                 <div class="accordion-header">
@@ -221,21 +222,45 @@
                         </div>
                     </div>
                     <p>En observant les graphiques de la <span class="highlight-dep">Charente (16)</span> et de la <span class="highlight-dep">Charente-Maritime (17)</span>, on remarque une rupture soudaine dans les volumes déclarés, particulièrement pour le vin blanc (en vert).</p>
-                    <p><strong>Explication :</strong> Cette variation brutale n'est pas due à un aléa climatique (gel, grêle...), mais à un <strong>changement de décret et de réglementation douanière</strong>.</p>
+                    <p><strong>Explication :</strong> Cette variation brutale n'est pas due à un aléa climatique, mais à un <strong>changement de décret et de réglementation douanière</strong>.</p>
                     <p>Une très grande part de la production de ces départements est destinée à la distillation pour produire du <em>Cognac</em> ou du <em>Pineau des Charentes</em>. À la suite de modifications administratives des cahiers des charges, la comptabilisation des <strong>vins destinés à la distillation</strong> a été séparée des vins "de consommation courante". Ainsi, des millions d'hectolitres ont virtuellement "disparu" de ces statistiques générales pour être comptabilisés dans une catégorie distincte par les douanes.</p>
+                    Source : Décret n° 2011-685 du 16 juin 2011 relatif à l'appellation d'origine contrôlée « Cognac » ou « Eau-de-vie de Cognac » ou « Eau-de-vie des Charentes »
                 </div>
             </div>
 
             <div class="accordion-item">
                 <div class="accordion-header">
-                    Une autre information intéressante viendra ici...
+                    Le gel du printemps 2017
                     <span class="accordion-icon">+</span>
                 </div>
                 <div class="accordion-content">
-                    <p>Vous pourrez ajouter ici de nouvelles analyses, des anecdotes historiques sur certains vignobles, ou des explications sur les variations dues aux aléas climatiques (comme le terrible gel du printemps 2017 par exemple).</p>
-                </div>
+                    <div class="mini-charts-wrapper">
+                        <div class="mini-chart-card" style="max-width: 600px;">
+                            <h4>Gironde (33) - Bordeaux</h4>
+                            <div id="mini-chart-33"></div>
+                        </div>
+                    </div>
+                    <p>L'année 2017 a été marquée par une baisse spectaculaire de la production nationale, la plus faible récolte enregistrée depuis 1945.</p>
+                    <p><strong>La cause :</strong> Des épisodes de <strong>gel noir très sévères fin avril</strong>, survenus après un début de printemps doux qui avait favorisé le bourgeonnement précoce des vignes.</p>
+                    <p>Comme le montre le graphique ci-dessus, le premier département viticole français, la <span class="highlight-dep">Gironde (33)</span>, a vu sa production de vin rouge (courbe rouge) chuter drastiquement d'environ 40% par rapport aux années précédentes. D'autres grandes régions comme l'Alsace, le Jura ou le Sud-Ouest ont également été lourdement impactées par cet aléa climatique extrême, tandis que la Bourgogne et la Champagne ont été relativement épargnées cette année-là.</p>
+                    <p class="source-text">(Sources : Ministère de l'Agriculture - Agreste / Conseil Interprofessionnel du Vin de Bordeaux - CIVB)</p>                </div>
             </div>
 
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    Qui sommes nous ? 
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <p>Léa Serval et Martin Crabeil</p>
+                    <p>
+                    Retrouvez l'intégralité du code source et des données ici : 
+                    <a href="https://github.com/Lserval/projetVizu" target="_blank" rel="noopener">
+                        Projet de Visualisation (GitHub)
+                    </a>
+                    </p>
+                </div>
+            </div>
         </div>
         </div>
 
@@ -247,7 +272,7 @@
             header.addEventListener('click', function() {
                 const item = this.parentElement;
                 
-                // Si on veut fermer les autres onglets quand on en ouvre un (comportement exclusif) :
+                // Option : fermer les autres onglets quand on en ouvre un
                 // document.querySelectorAll('.accordion-item').forEach(otherItem => {
                 //     if(otherItem !== item) otherItem.classList.remove('active');
                 // });
@@ -611,6 +636,7 @@
             
             drawMiniChart("16", "#mini-chart-16"); 
             drawMiniChart("17", "#mini-chart-17"); 
+            drawMiniChart("33", "#mini-chart-33"); // Ajout du mini-graphe Gironde
 
         });
     </script>
