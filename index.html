@@ -28,7 +28,7 @@
         .year-tick:hover { background: #dfe4ea; color: #2c3e50; }
         .year-tick.active { background: #e74c3c; color: white; box-shadow: 0 2px 5px rgba(231, 76, 60, 0.4); }
 
-        .main-content { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; }
+        .main-content { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; align-items: stretch; }
         #map-container { flex: 2; background: white; border-radius: 8px; padding: 10px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         
         /* Styles pour la légende de la carte */
@@ -37,8 +37,12 @@
         .legend-bar { height: 12px; width: 180px; border-radius: 6px; border: 1px solid #dcdde1; margin-bottom: 5px; }
         .legend-labels { display: flex; justify-content: space-between; font-size: 0.8em; color: #7f8c8d; font-weight: bold; }
 
-        #top10-container { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-width: 320px; }
-        #top10-list { list-style: none; padding: 0; margin: 0; }
+        #top10-container { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-width: 320px; display: flex; flex-direction: column; }
+        
+        /* Scroll ajouté pour la liste */
+        #top10-list { list-style: none; padding: 0; margin: 0; max-height: 480px; overflow-y: auto; padding-right: 5px; scrollbar-width: thin; flex-grow: 1; }
+        #top10-list::-webkit-scrollbar { width: 6px; }
+        #top10-list::-webkit-scrollbar-thumb { background-color: #bdc3c7; border-radius: 10px; }
         
         .dep-card {
             display: flex; align-items: center; padding: 10px 15px; margin-bottom: 10px;
@@ -48,7 +52,7 @@
         .dep-card:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #f8f9fa; }
         .dep-card.selected-item { border-color: #34495e; background: #ebf2ff; }
 
-        .rank-badge { width: 28px; height: 28px; background: #34495e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; font-weight: bold; margin-right: 15px; }
+        .rank-badge { min-width: 28px; height: 28px; background: #34495e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; font-weight: bold; margin-right: 15px; padding: 0 5px; }
         .dep-info { flex-grow: 1; }
         .dep-name { display: block; font-weight: bold; font-size: 1em; color: #2d3436; }
         .dep-val { font-size: 0.9em; color: #d63031; font-weight: bold; }
@@ -62,6 +66,10 @@
         .rank-diff { font-size: 0.8em; font-weight: bold; }
         .diff-up { color: #27ae60; }
         .diff-down { color: #e17055; }
+
+        /* Bouton bascule liste */
+        #toggle-list-btn { width: 100%; padding: 12px; margin-top: 15px; background-color: #f1f2f6; border: 1px solid #dfe4ea; border-radius: 5px; cursor: pointer; font-weight: bold; color: #2f3542; transition: all 0.2s; }
+        #toggle-list-btn:hover { background-color: #dfe4ea; }
 
         #chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; min-height: 450px; position: relative; }
         path.dep { stroke: #fff; stroke-width: 0.5px; transition: fill 0.3s; cursor: pointer; }
@@ -79,7 +87,7 @@
 
     <div id="dashboard">
         <div id="controls">
-            <h2>Analyse Viticole de la France</h2>
+            <h2>🍷 Analyse Viticole de la France</h2>
             <div class="btn-group">
                 <button class="type-btn active" data-type="total">Total</button>
                 <button class="type-btn" data-type="blanc">Vin Blanc</button>
@@ -104,8 +112,9 @@
                 </div>
             </div>
             <div id="top10-container">
-                <h3>🏆 Top 10 Producteurs 🏆</h3>
+                <h3 id="list-title">🏆 Top 10 Producteurs 🏆</h3>
                 <ul id="top10-list"></ul>
+                <button id="toggle-list-btn">Voir tous les départements</button>
             </div>
         </div>
 
@@ -121,6 +130,7 @@
         const width = 800, height = 600;
         let currentType = "total", currentYear = 2009;
         let animationTimer = null, selectedDepCode = null;
+        let showAllDepartments = false; // Nouvel état pour gérer l'affichage de la liste
 
         const bottleSvg = (className) => `
             <svg class="wine-icon ${className}" viewBox="0 0 24 24">
@@ -163,6 +173,14 @@
                     if(animationTimer) stopAnimation();
                 });
 
+            // Bouton pour afficher tous les départements
+            d3.select("#toggle-list-btn").on("click", function() {
+                showAllDepartments = !showAllDepartments;
+                d3.select(this).text(showAllDepartments ? "Voir seulement le Top 10" : "Voir tous les départements");
+                d3.select("#list-title").text(showAllDepartments ? "🍷 Classement Complet 🍷" : "🏆 Top 10 Producteurs 🏆");
+                update();
+            });
+
             const colorScales = {
                 total: d3.scaleSequentialLog().domain([1, 6000000]).interpolator(d3.interpolatePurples),
                 blanc: d3.scaleSequentialLog().domain([1, 3000000]).interpolator(d3.interpolateYlGn),
@@ -191,19 +209,29 @@
                     return val >= 1 ? scale(val) : "#eee";
                 });
 
-                const getTop = (y) => Object.keys(dataByYear[y]||{}).map(c=>({code:c, nom:depNames[c], val:dataByYear[y][c][currentType]})).sort((a,b)=>b.val-a.val);
-                const currentTop = getTop(currentYear).slice(0, 10);
-                const prevTop = getTop(currentYear - 1);
+                // --- Gestion de la liste ---
+                // On récupère TOUS les départements, en excluant ceux à 0
+                const getTop = (y) => Object.keys(dataByYear[y]||{})
+                    .map(c=>({code:c, nom:depNames[c], val:dataByYear[y][c][currentType]}))
+                    .filter(d => d.val > 0)
+                    .sort((a,b)=>b.val-a.val);
+                
+                const allCurrentTop = getTop(currentYear);
+                const allPrevTop = getTop(currentYear - 1); // Pour le classement N-1
 
-                const list = d3.select("#top10-list").selectAll("li").data(currentTop, d=>d.code);
+                // On coupe ou on garde tout en fonction de showAllDepartments
+                const currentData = showAllDepartments ? allCurrentTop : allCurrentTop.slice(0, 10);
+
+                const list = d3.select("#top10-list").selectAll("li").data(currentData, d=>d.code);
                 
                 list.join("li")
                     .attr("class", d => `dep-card ${selectedDepCode === d.code ? 'selected-item' : ''}`)
                     .html((d, i) => {
                         let bottleClass = "bottle-steady";
                         let diffHtml = "";
-                        if(prevTop.length){
-                            const oldIdx = prevTop.findIndex(p=>p.code===d.code);
+                        if(allPrevTop.length){
+                            // On cherche la place qu'il avait dans TOUT le classement précédent
+                            const oldIdx = allPrevTop.findIndex(p=>p.code===d.code);
                             if(oldIdx === -1 || oldIdx > i) {
                                 bottleClass = "bottle-up";
                                 const diff = oldIdx === -1 ? "N" : oldIdx - i;
@@ -248,6 +276,12 @@
 
                 // Update List UI
                 d3.selectAll(".dep-card").classed("selected-item", d => d.code === code);
+                
+                // Auto-scroll the list to show selected element
+                const selectedNode = d3.select(`.dep-card.selected-item`).node();
+                if(selectedNode) {
+                    selectedNode.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
 
                 // Update Chart
                 drawChart(code);
@@ -262,7 +296,6 @@
 
                 d3.select("#chart-svg").html("");
                 
-                // J'ai augmenté la marge du haut pour laisser de la place au titre de l'axe Y
                 const margin = {top: 40, right: 30, bottom: 40, left: 70}, 
                       w = 800 - margin.left - margin.right, 
                       h = 350 - margin.top - margin.bottom;
@@ -276,18 +309,15 @@
 
                 cSvg.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
                 
-                // D3 formate automatiquement avec k (milliers) et M (millions) grâce à "~s"
                 cSvg.append("g").call(d3.axisLeft(y).tickFormat(d3.format("~s")));
 
-                // --- Ajout de l'étiquette de l'Axe Y ---
                 cSvg.append("text")
-                    .attr("x", -50) // Positionné juste au-dessus de l'axe
+                    .attr("x", -50)
                     .attr("y", -15)
                     .style("font-size", "12px")
                     .style("font-weight", "bold")
                     .style("fill", "#7f8c8d")
                     .text("Volume (Hectolitres)");
-                // --------------------------------------
 
                 const types = [
                     {k:"total", c:"#6a51a3", n: "Total"}, 
@@ -295,7 +325,6 @@
                     {k:"rouge", c:"#cb181d", n: "Vin Rouge/Rosé"}
                 ];
 
-                // Create Legend
                 const legend = d3.select("#chart-legend").html("");
                 types.forEach(t => {
                     const item = legend.append("div").attr("class", "legend-item");
@@ -304,13 +333,11 @@
                 });
 
                 types.forEach(t => {
-                    // Lines
                     cSvg.append("path").datum(data)
                         .attr("class", `line`)
                         .attr("stroke", t.c)
                         .attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
 
-                    // Points
                     cSvg.selectAll(`.dot-${t.k}`).data(data).enter().append("circle")
                         .attr("cx", d=>x(d.year)).attr("cy", d=>y(d[t.k])).attr("r", 5).attr("fill", t.c)
                         .on("mouseover", (event, d) => {
