@@ -11,7 +11,6 @@
         #controls { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; position: relative; }
         
         .info-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
-        
         .info-btn { width: 30px; height: 30px; background-color: #34495e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2em; cursor: pointer; border: none; transition: background-color 0.2s; outline: none; }
         .info-btn:hover { background-color: #2c3e50; }
         
@@ -70,8 +69,8 @@
         #toggle-list-btn { width: 100%; padding: 12px; margin-top: 15px; background-color: #f1f2f6; border: 1px solid #dfe4ea; border-radius: 5px; cursor: pointer; font-weight: bold; color: #2f3542; transition: all 0.2s; }
         #toggle-list-btn:hover { background-color: #dfe4ea; }
 
-        #chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; min-height: 450px; position: relative; }
-        path.dep { stroke: #fff; stroke-width: 0.5px; transition: fill 0.3s; cursor: pointer; }
+        #chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; min-height: 450px; position: relative; margin-bottom: 20px;}
+        path.dep { stroke: #fff; stroke-width: 0.5px; cursor: pointer; } 
         path.selected { stroke: #e74c3c; stroke-width: 3px; }
         .tooltip { position: absolute; background: rgba(255, 255, 255, 0.98); border: 1px solid #333; padding: 12px; border-radius: 6px; pointer-events: none; opacity: 0; z-index: 1000; font-size: 13px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
         
@@ -80,8 +79,63 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 15px; height: 15px; border-radius: 3px; }
         
-        /* Style pour les camemberts sur la carte */
         .pie path { stroke: #fff; stroke-width: 0.5px; opacity: 0.9; }
+
+        /* --- Styles pour la section Accordéon "Le saviez-vous ?" --- */
+        #did-you-know-section { width: 100%; margin-top: 20px; }
+        .dyk-header { color: #2c3e50; margin-bottom: 15px; padding-left: 5px; }
+        
+        .accordion-item {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 10px;
+            overflow: hidden;
+            border-left: 5px solid #34495e;
+        }
+        
+        .accordion-header {
+            padding: 15px 20px;
+            background-color: #fff;
+            color: #2c3e50;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .accordion-header:hover { background-color: #f8f9fa; }
+        
+        .accordion-icon {
+            transition: transform 0.3s ease;
+            font-size: 1.2em;
+        }
+        
+        .accordion-item.active .accordion-icon { transform: rotate(45deg); }
+        
+        .accordion-content {
+            padding: 0 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
+            color: #34495e;
+            line-height: 1.6;
+            background-color: #fafbfc;
+        }
+        
+        .accordion-item.active .accordion-content {
+            padding: 20px;
+            max-height: 800px; /* Valeur arbitraire grande pour permettre l'ouverture */
+        }
+
+        .highlight-dep { background-color: #e0e6ed; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #c0392b; }
+
+        .mini-charts-wrapper { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;}
+        .mini-chart-card { flex: 1; min-width: 250px; max-width: 400px; background: #fff; border-radius: 8px; padding: 10px; border: 1px solid #dcdde1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        .mini-chart-card h4 { margin: 0 0 5px 0; text-align: center; color: #2c3e50; font-size: 0.9em; }
     </style>
 </head>
 <body>
@@ -146,9 +200,63 @@
             <div id="chart-svg"></div>
             <div class="legend-container" id="chart-legend"></div>
         </div>
-    </div>
+
+        <div id="did-you-know-section">
+            <h2 class="dyk-header">💡 Le saviez-vous ?</h2>
+            
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    L'anomalie statistique de la région de Cognac
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="mini-charts-wrapper">
+                        <div class="mini-chart-card">
+                            <h4>Charente (16)</h4>
+                            <div id="mini-chart-16"></div>
+                        </div>
+                        <div class="mini-chart-card">
+                            <h4>Charente-Maritime (17)</h4>
+                            <div id="mini-chart-17"></div>
+                        </div>
+                    </div>
+                    <p>En observant les graphiques de la <span class="highlight-dep">Charente (16)</span> et de la <span class="highlight-dep">Charente-Maritime (17)</span>, on remarque une rupture soudaine dans les volumes déclarés, particulièrement pour le vin blanc (en vert).</p>
+                    <p><strong>Explication :</strong> Cette variation brutale n'est pas due à un aléa climatique (gel, grêle...), mais à un <strong>changement de décret et de réglementation douanière</strong>.</p>
+                    <p>Une très grande part de la production de ces départements est destinée à la distillation pour produire du <em>Cognac</em> ou du <em>Pineau des Charentes</em>. À la suite de modifications administratives des cahiers des charges, la comptabilisation des <strong>vins destinés à la distillation</strong> a été séparée des vins "de consommation courante". Ainsi, des millions d'hectolitres ont virtuellement "disparu" de ces statistiques générales pour être comptabilisés dans une catégorie distincte par les douanes.</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    Une autre information intéressante viendra ici...
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <p>Vous pourrez ajouter ici de nouvelles analyses, des anecdotes historiques sur certains vignobles, ou des explications sur les variations dues aux aléas climatiques (comme le terrible gel du printemps 2017 par exemple).</p>
+                </div>
+            </div>
+
+        </div>
+        </div>
 
     <script>
+        // --- Gestion de l'Accordéon ---
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+        
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                const item = this.parentElement;
+                
+                // Si on veut fermer les autres onglets quand on en ouvre un (comportement exclusif) :
+                // document.querySelectorAll('.accordion-item').forEach(otherItem => {
+                //     if(otherItem !== item) otherItem.classList.remove('active');
+                // });
+                
+                item.classList.toggle('active');
+            });
+        });
+        // ------------------------------
+
         const infoBtn = document.getElementById('info-toggle-btn');
         const infoPopup = document.getElementById('info-popup');
         const commentBox = document.getElementById('user-comments');
@@ -190,7 +298,6 @@
         const projection = d3.geoConicConformal().center([2.454071, 46.279229]).scale(3000).translate([width/2, height/2]);
         const pathGenerator = d3.geoPath().projection(projection);
 
-        // Groupes distincts pour s'assurer que les camemberts sont au-dessus des départements
         const mapGroup = svg.append("g").attr("id", "map-paths");
         const pieGroup = svg.append("g").attr("id", "map-pies").style("pointer-events", "none");
 
@@ -239,7 +346,6 @@
                 rouge: d3.scaleSequentialLog().domain([1, 6000000]).interpolator(d3.interpolateReds)
             };
 
-            // Initialisation des tracés de la carte
             const mapPaths = mapGroup.selectAll("path")
                 .data(france.features).join("path").attr("class", "dep").attr("d", pathGenerator).attr("fill", "#eee")
                 .on("mousemove", (event, d) => {
@@ -265,17 +371,15 @@
                 const formattedMax = maxDomain >= 1000000 ? (maxDomain / 1000000) + " Millions" : d3.format(",")(maxDomain).replace(/,/g, ' ');
                 d3.select("#map-legend-max").text(formattedMax);
 
-                mapPaths.transition().attr("fill", d => {
+                mapPaths.attr("fill", d => {
                     const val = dataByYear[currentYear]?.[d.properties.code]?.[currentType] || 0;
                     return val >= 1 ? scale(val) : "#eee";
                 });
 
-                // --- GESTION DES CAMEMBERTS ---
                 if (currentType === "total") {
                     const pieGenerator = d3.pie().value(d => d.val).sort(null);
-                    const arcGenerator = d3.arc().innerRadius(0).outerRadius(8); // Taille du camembert
+                    const arcGenerator = d3.arc().innerRadius(0).outerRadius(8); 
                     
-                    // Filtrer les départements qui ont une production totale > 0
                     const validFeatures = france.features.filter(d => {
                         const info = dataByYear[currentYear]?.[d.properties.code];
                         return info && info.total > 0;
@@ -286,7 +390,6 @@
                     const piesEnter = pies.enter().append("g").attr("class", "pie")
                         .attr("transform", d => {
                             const centroid = pathGenerator.centroid(d);
-                            // Gestion d'erreur au cas où un centroïde ne peut être calculé
                             return isNaN(centroid[0]) ? "translate(-100,-100)" : `translate(${centroid[0]}, ${centroid[1]})`;
                         });
                         
@@ -308,10 +411,8 @@
                     paths.exit().remove();
                     pies.exit().remove();
                 } else {
-                    // Si on n'est pas sur "Total", on retire tous les camemberts
                     pieGroup.selectAll("g.pie").remove();
                 }
-                // -----------------------------
 
                 const getTop = (y) => Object.keys(dataByYear[y]||{})
                     .map(c=>({code:c, nom:depNames[c], val:dataByYear[y][c][currentType]}))
@@ -446,6 +547,44 @@
                 });
             }
 
+            function drawMiniChart(code, containerId) {
+                const data = historyByDep[code];
+                if (!data) return; 
+                
+                data.sort((a,b)=>a.year-b.year);
+                
+                const margin = {top: 10, right: 10, bottom: 20, left: 40},
+                      w = 400 - margin.left - margin.right,
+                      h = 150 - margin.top - margin.bottom;
+
+                const svg = d3.select(containerId).append("svg")
+                    .attr("viewBox", `0 0 400 150`)
+                    .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+                const x = d3.scaleLinear().domain([2009, 2018]).range([0, w]);
+                const y = d3.scaleLinear().domain([0, d3.max(data, d=>d.total)*1.1]).range([h, 0]);
+
+                svg.append("g").attr("transform", `translate(0,${h})`)
+                   .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("d")));
+                   
+                svg.append("g")
+                   .call(d3.axisLeft(y).ticks(3).tickFormat(d3.format("~s")));
+
+                const types = [
+                    {k:"total", c:"#6a51a3"}, 
+                    {k:"blanc", c:"#238b45"}, 
+                    {k:"rouge", c:"#cb181d"}
+                ];
+
+                types.forEach(t => {
+                    svg.append("path").datum(data)
+                        .attr("fill", "none")
+                        .attr("stroke", t.c)
+                        .attr("stroke-width", 2.5) 
+                        .attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
+                });
+            }
+
             function stopAnimation() {
                 clearInterval(animationTimer); animationTimer = null;
                 d3.select("#play-btn").text("Lecture").classed("playing", false);
@@ -469,6 +608,10 @@
             });
 
             update();
+            
+            drawMiniChart("16", "#mini-chart-16"); 
+            drawMiniChart("17", "#mini-chart-17"); 
+
         });
     </script>
 </body>
