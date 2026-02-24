@@ -17,9 +17,6 @@
         .info-content { visibility: hidden; opacity: 0; position: absolute; top: 45px; right: 0; width: 300px; background: rgba(255, 255, 255, 0.98); color: #2f3542; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 0.9em; text-align: left; transition: all 0.3s ease; border: 1px solid #edf2f7; }
         .info-content.show { visibility: visible; opacity: 1; top: 40px; }
 
-        .comment-section { margin-top: 15px; padding-top: 15px; border-top: 1px solid #dcdde1; }
-        .comment-section textarea { width: 100%; box-sizing: border-box; height: 80px; margin-top: 8px; padding: 8px; border-radius: 5px; border: 1px solid #bdc3c7; font-family: 'Open Sans', sans-serif; resize: vertical; }
-
         .btn-group { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; }
         .type-btn, #play-btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
         .type-btn { background-color: #e0e0e0; }
@@ -81,59 +78,19 @@
         
         .pie path { stroke: #fff; stroke-width: 0.5px; opacity: 0.9; }
 
-        /* --- Styles pour la section Accordéon "Le saviez-vous ?" --- */
+        /* --- Styles pour la section Accordéon --- */
         #did-you-know-section { width: 100%; margin-top: 20px; }
         .dyk-header { color: #2c3e50; margin-bottom: 15px; padding-left: 5px; }
         
-        .accordion-item {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 10px;
-            overflow: hidden;
-            border-left: 5px solid #34495e;
-        }
-        
-        .accordion-header {
-            padding: 15px 20px;
-            background-color: #fff;
-            color: #2c3e50;
-            font-weight: bold;
-            font-size: 1.1em;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background-color 0.2s;
-        }
-        
+        .accordion-item { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; overflow: hidden; border-left: 5px solid #34495e; }
+        .accordion-header { padding: 15px 20px; background-color: #fff; color: #2c3e50; font-weight: bold; font-size: 1.1em; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s; }
         .accordion-header:hover { background-color: #f8f9fa; }
-        
-        .accordion-icon {
-            transition: transform 0.3s ease;
-            font-size: 1.2em;
-        }
-        
+        .accordion-icon { transition: transform 0.3s ease; font-size: 1.2em; }
         .accordion-item.active .accordion-icon { transform: rotate(45deg); }
-        
-        .accordion-content {
-            padding: 0 20px;
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease-out, padding 0.4s ease-out;
-            color: #34495e;
-            line-height: 1.6;
-            background-color: #fafbfc;
-        }
-        
-        .accordion-item.active .accordion-content {
-            padding: 20px;
-            max-height: 1200px; /* Augmenté pour les graphes */
-        }
+        .accordion-content { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; color: #34495e; line-height: 1.6; background-color: #fafbfc; }
+        .accordion-item.active .accordion-content { padding: 20px; max-height: 1200px; }
 
         .highlight-dep { background-color: #e0e6ed; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #c0392b; }
-        .highlight-year { background-color: #fce4ec; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #2980b9; }
-
         .mini-charts-wrapper { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;}
         .mini-chart-card { flex: 1; min-width: 250px; max-width: 400px; background: #fff; border-radius: 8px; padding: 10px; border: 1px solid #dcdde1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
         .mini-chart-card h4 { margin: 0 0 5px 0; text-align: center; color: #2c3e50; font-size: 0.9em; }
@@ -143,7 +100,6 @@
 
     <div id="dashboard">
         <div id="controls">
-            
             <div class="info-container">
                 <button class="info-btn" id="info-toggle-btn">?</button>
                 <div class="info-content" id="info-popup">
@@ -155,12 +111,7 @@
                     <br><br>
                     <strong>📊 Source :</strong>
                     <br>
-                    Données issues du site du gouvernement <em>https://www.data.gouv.fr/datasets/statistiques-viti-vinicoles-releves-annuels-des-stocks-et-des-recoltes-depuis-2009</em> (Volumes déclarés).
-                    
-                    <div class="comment-section">
-                        <strong>📝 Vos notes d'analyse :</strong>
-                        <textarea id="user-comments" placeholder="Saisissez vos observations ici... (Sauvegardées automatiquement)"></textarea>
-                    </div>
+                    Données issues du site du gouvernement <em>https://www.data.gouv.fr/datasets/statistiques-viti-vinicoles-releves-annuels-des-stocks-et-des-recoltes-depuis-2009</em>.
                 </div>
             </div>
             
@@ -221,29 +172,26 @@
                             <div id="mini-chart-17"></div>
                         </div>
                     </div>
-                    <p>En observant les graphiques de la <span class="highlight-dep">Charente (16)</span> et de la <span class="highlight-dep">Charente-Maritime (17)</span>, on remarque une rupture soudaine dans les volumes déclarés, particulièrement pour le vin blanc (en vert).</p>
-                    <p><strong>Explication :</strong> Cette variation brutale n'est pas due à un aléa climatique, mais à un <strong>changement de décret et de réglementation douanière</strong>.</p>
-                    <p>Une très grande part de la production de ces départements est destinée à la distillation pour produire du <em>Cognac</em> ou du <em>Pineau des Charentes</em>. À la suite de modifications administratives des cahiers des charges, la comptabilisation des <strong>vins destinés à la distillation</strong> a été séparée des vins "de consommation courante". Ainsi, des millions d'hectolitres ont virtuellement "disparu" de ces statistiques générales pour être comptabilisés dans une catégorie distincte par les douanes.</p>
-                    Source : Décret n° 2011-685 du 16 juin 2011 relatif à l'appellation d'origine contrôlée « Cognac » ou « Eau-de-vie de Cognac » ou « Eau-de-vie des Charentes »
+                    <p>En observant les graphiques de la <span class="highlight-dep">Charente (16)</span> et de la <span class="highlight-dep">Charente-Maritime (17)</span>, on remarque une rupture soudaine en 2012.</p>
+                    <p><strong>Explication :</strong> Cette variation brutale est due à un <strong>changement de réglementation (Décret n° 2011-685)</strong>. Les vins destinés à la distillation pour le Cognac ont été extraits des statistiques générales de "vin blanc" pour être comptabilisés à part.</p>
                 </div>
             </div>
 
             <div class="accordion-item">
                 <div class="accordion-header">
-                    Le gel du printemps 2017
+                    Le gel du printemps 2017 : Impact National
                     <span class="accordion-icon">+</span>
                 </div>
                 <div class="accordion-content">
                     <div class="mini-charts-wrapper">
                         <div class="mini-chart-card" style="max-width: 600px;">
-                            <h4>Gironde (33) - Bordeaux</h4>
-                            <div id="mini-chart-33"></div>
+                            <h4>Production Totale Française (Tous départements cumulés)</h4>
+                            <div id="mini-chart-total-france"></div>
                         </div>
                     </div>
-                    <p>L'année 2017 a été marquée par une baisse spectaculaire de la production nationale, la plus faible récolte enregistrée depuis 1945.</p>
-                    <p><strong>La cause :</strong> Des épisodes de <strong>gel noir très sévères fin avril</strong>, survenus après un début de printemps doux qui avait favorisé le bourgeonnement précoce des vignes.</p>
-                    <p>Comme le montre le graphique ci-dessus, le premier département viticole français, la <span class="highlight-dep">Gironde (33)</span>, a vu sa production de vin rouge (courbe rouge) chuter drastiquement d'environ 40% par rapport aux années précédentes. D'autres grandes régions comme l'Alsace, le Jura ou le Sud-Ouest ont également été lourdement impactées par cet aléa climatique extrême, tandis que la Bourgogne et la Champagne ont été relativement épargnées cette année-là.</p>
-                    <p class="source-text">(Sources : Ministère de l'Agriculture - Agreste / Conseil Interprofessionnel du Vin de Bordeaux - CIVB)</p>                </div>
+                    <p>L'année 2017 a connu la plus faible récolte nationale depuis 1945.</p>
+                    <p><strong>La cause :</strong> Un épisode de <strong>gel noir sévère fin avril</strong> ayant touché la quasi-totalité des bassins viticoles français simultanément.</p>
+                </div>
             </div>
 
             <div class="accordion-item">
@@ -253,62 +201,35 @@
                 </div>
                 <div class="accordion-content">
                     <p>Léa Serval et Martin Crabeil</p>
-                    <p>
-                    Retrouvez l'intégralité du code source et des données ici : 
-                    <a href="https://github.com/Lserval/projetVizu" target="_blank" rel="noopener">
-                        Projet de Visualisation (GitHub)
-                    </a>
-                    </p>
+                    <p>Retrouvez l'intégralité du code source ici : <a href="https://github.com/Lserval/projetVizu" target="_blank">Projet de Visualisation (GitHub)</a></p>
                 </div>
             </div>
         </div>
-        </div>
+    </div>
 
     <script>
         // --- Gestion de l'Accordéon ---
         const accordionHeaders = document.querySelectorAll('.accordion-header');
-        
         accordionHeaders.forEach(header => {
             header.addEventListener('click', function() {
-                const item = this.parentElement;
-                
-                // Option : fermer les autres onglets quand on en ouvre un
-                // document.querySelectorAll('.accordion-item').forEach(otherItem => {
-                //     if(otherItem !== item) otherItem.classList.remove('active');
-                // });
-                
-                item.classList.toggle('active');
+                this.parentElement.classList.toggle('active');
             });
         });
-        // ------------------------------
 
+        // --- Info Popup ---
         const infoBtn = document.getElementById('info-toggle-btn');
         const infoPopup = document.getElementById('info-popup');
-        const commentBox = document.getElementById('user-comments');
 
         infoBtn.addEventListener('click', function(e) {
             infoPopup.classList.toggle('show');
             e.stopPropagation();
         });
 
-        infoPopup.addEventListener('click', function(e) {
-            e.stopPropagation();
-        });
-
         document.addEventListener('click', function() {
-            if (infoPopup.classList.contains('show')) {
-                infoPopup.classList.remove('show');
-            }
+            infoPopup.classList.remove('show');
         });
 
-        if(localStorage.getItem('wineDashboardComments')) {
-            commentBox.value = localStorage.getItem('wineDashboardComments');
-        }
-
-        commentBox.addEventListener('input', function() {
-            localStorage.setItem('wineDashboardComments', this.value);
-        });
-
+        // --- D3.js Logic ---
         const width = 800, height = 600;
         let currentType = "total", currentYear = 2009;
         let animationTimer = null, selectedDepCode = null;
@@ -352,11 +273,7 @@
                 .data(sortedYears).enter().append("div")
                 .attr("class", d => d === currentYear ? "year-tick active" : "year-tick")
                 .text(d => d)
-                .on("click", function(event, d) {
-                    currentYear = d;
-                    update();
-                    if(animationTimer) stopAnimation();
-                });
+                .on("click", (event, d) => { currentYear = d; update(); stopAnimation(); });
 
             d3.select("#toggle-list-btn").on("click", function() {
                 showAllDepartments = !showAllDepartments;
@@ -372,29 +289,24 @@
             };
 
             const mapPaths = mapGroup.selectAll("path")
-                .data(france.features).join("path").attr("class", "dep").attr("d", pathGenerator).attr("fill", "#eee")
+                .data(france.features).join("path").attr("class", "dep").attr("d", pathGenerator)
                 .on("mousemove", (event, d) => {
                     const info = dataByYear[currentYear]?.[d.properties.code] || {blanc:0, rouge:0, total:0};
                     const rect = document.getElementById("map-container").getBoundingClientRect();
-                    d3.select("#tooltip").style("opacity", 1).html(`<strong>${d.properties.nom} (${d.properties.code})</strong><br>Production: ${Math.round(info[currentType]).toLocaleString()} hl`)
+                    d3.select("#tooltip").style("opacity", 1).html(`<strong>${d.properties.nom}</strong><br>Production: ${Math.round(info[currentType]).toLocaleString()} hl`)
                         .style("left", (event.clientX - rect.left + 15) + "px").style("top", (event.clientY - rect.top - 15) + "px");
                 }).on("mouseout", () => d3.select("#tooltip").style("opacity", 0))
                 .on("click", (e, d) => selectDepartment(d.properties.code));
 
             function update() {
                 d3.selectAll(".year-tick").classed("active", d => d === currentYear);
-
                 const scale = colorScales[currentType];
-                
                 const maxDomain = scale.domain()[1];
-                let gradientStops = [];
-                for (let i = 0; i <= 10; i++) {
-                    gradientStops.push(scale.interpolator()(i / 10));
-                }
-                d3.select("#map-legend-bar").style("background", `linear-gradient(to right, ${gradientStops.join(", ")})`);
                 
-                const formattedMax = maxDomain >= 1000000 ? (maxDomain / 1000000) + " Millions" : d3.format(",")(maxDomain).replace(/,/g, ' ');
-                d3.select("#map-legend-max").text(formattedMax);
+                let stops = [];
+                for (let i = 0; i <= 10; i++) stops.push(scale.interpolator()(i / 10));
+                d3.select("#map-legend-bar").style("background", `linear-gradient(to right, ${stops.join(", ")})`);
+                d3.select("#map-legend-max").text(maxDomain >= 1000000 ? (maxDomain/1000000)+"M" : maxDomain);
 
                 mapPaths.attr("fill", d => {
                     const val = dataByYear[currentYear]?.[d.properties.code]?.[currentType] || 0;
@@ -402,228 +314,76 @@
                 });
 
                 if (currentType === "total") {
-                    const pieGenerator = d3.pie().value(d => d.val).sort(null);
-                    const arcGenerator = d3.arc().innerRadius(0).outerRadius(8); 
-                    
-                    const validFeatures = france.features.filter(d => {
-                        const info = dataByYear[currentYear]?.[d.properties.code];
-                        return info && info.total > 0;
-                    });
-
+                    const pieGen = d3.pie().value(d => d.val).sort(null);
+                    const arcGen = d3.arc().innerRadius(0).outerRadius(8);
+                    const validFeatures = france.features.filter(d => dataByYear[currentYear]?.[d.properties.code]?.total > 0);
                     const pies = pieGroup.selectAll("g.pie").data(validFeatures, d => d.properties.code);
-                    
-                    const piesEnter = pies.enter().append("g").attr("class", "pie")
-                        .attr("transform", d => {
-                            const centroid = pathGenerator.centroid(d);
-                            return isNaN(centroid[0]) ? "translate(-100,-100)" : `translate(${centroid[0]}, ${centroid[1]})`;
-                        });
-                        
+                    const piesEnter = pies.enter().append("g").attr("class", "pie").attr("transform", d => `translate(${pathGenerator.centroid(d)})`);
                     const allPies = piesEnter.merge(pies);
-                    
                     const paths = allPies.selectAll("path").data(d => {
                         const info = dataByYear[currentYear][d.properties.code];
-                        return pieGenerator([
-                            {key: 'blanc', val: info.blanc, color: '#f5ee6e'},
-                            {key: 'rouge', val: info.rouge, color: '#cb181d'}
-                        ]);
+                        return pieGen([{val: info.blanc, color: '#f5ee6e'}, {val: info.rouge, color: '#cb181d'}]);
                     });
-                    
-                    paths.enter().append("path")
-                        .merge(paths)
-                        .attr("d", arcGenerator)
-                        .attr("fill", d => d.data.color);
-                        
-                    paths.exit().remove();
+                    paths.join("path").attr("d", arcGen).attr("fill", d => d.data.color);
                     pies.exit().remove();
-                } else {
-                    pieGroup.selectAll("g.pie").remove();
-                }
+                } else pieGroup.selectAll("g.pie").remove();
 
-                const getTop = (y) => Object.keys(dataByYear[y]||{})
-                    .map(c=>({code:c, nom:depNames[c], val:dataByYear[y][c][currentType]}))
-                    .filter(d => d.val > 0)
-                    .sort((a,b)=>b.val-a.val);
-                
-                const allCurrentTop = getTop(currentYear);
-                const allPrevTop = getTop(currentYear - 1);
-
-                const currentData = showAllDepartments ? allCurrentTop : allCurrentTop.slice(0, 10);
-
-                const list = d3.select("#top10-list").selectAll("li").data(currentData, d=>d.code);
-                
-                list.join("li")
-                    .attr("class", d => `dep-card ${selectedDepCode === d.code ? 'selected-item' : ''}`)
-                    .html((d, i) => {
-                        let bottleClass = "bottle-steady";
-                        let diffHtml = "";
-                        if(allPrevTop.length){
-                            const oldIdx = allPrevTop.findIndex(p=>p.code===d.code);
-                            if(oldIdx === -1 || oldIdx > i) {
-                                bottleClass = "bottle-up";
-                                const diff = oldIdx === -1 ? "N" : oldIdx - i;
-                                diffHtml = `<span class="rank-diff diff-up">+${diff}</span>`;
-                            } 
-                            else if(oldIdx < i) {
-                                bottleClass = "bottle-down";
-                                diffHtml = `<span class="rank-diff diff-down">-${i - oldIdx}</span>`;
-                            }
-                        }
-                        return `
-                            <div class="rank-badge">${i+1}</div>
-                            <div class="dep-info">
-                                <span class="dep-name">${d.nom} (${d.code})</span>
-                                <span class="dep-val">${Math.round(d.val).toLocaleString()} hl</span>
-                            </div>
-                            <div class="trend-container">
-                                ${diffHtml}
-                                ${bottleSvg(bottleClass)}
-                            </div>`;
-                    })
+                const topData = Object.keys(dataByYear[currentYear]||{}).map(c=>({code:c, nom:depNames[c], val:dataByYear[currentYear][c][currentType]})).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
+                const listData = showAllDepartments ? topData : topData.slice(0, 10);
+                const list = d3.select("#top10-list").selectAll("li").data(listData, d=>d.code);
+                list.join("li").attr("class", d => `dep-card ${selectedDepCode === d.code ? 'selected-item' : ''}`)
+                    .html((d, i) => `<div class="rank-badge">${i+1}</div><div class="dep-info"><span class="dep-name">${d.nom}</span><span class="dep-val">${Math.round(d.val).toLocaleString()} hl</span></div>`)
                     .on("click", (e, d) => selectDepartment(d.code));
             }
 
             function selectDepartment(code) {
-                if (selectedDepCode === code) {
-                    selectedDepCode = null;
-                } else {
-                    selectedDepCode = code;
-                }
-                
+                selectedDepCode = (selectedDepCode === code) ? null : code;
                 d3.selectAll(".dep").classed("selected", d => d.properties.code === selectedDepCode);
-                if (selectedDepCode) {
-                    const selectedPath = d3.selectAll(".dep").filter(d => d.properties.code === selectedDepCode);
-                    if(!selectedPath.empty()) selectedPath.raise();
-                }
-
-                d3.selectAll(".dep-card").classed("selected-item", d => d.code === selectedDepCode);
-                
-                if (selectedDepCode) {
-                    const selectedNode = d3.select(`.dep-card.selected-item`).node();
-                    if(selectedNode) {
-                        selectedNode.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                    }
-                    drawChart(selectedDepCode);
-                } else {
-                    d3.select("#chart-title").text("Sélectionnez un département sur la carte ou le classement");
-                    d3.select("#chart-svg").html("");
-                    d3.select("#chart-legend").html("");
-                }
+                update();
+                if (selectedDepCode) drawChart(selectedDepCode);
+                else { d3.select("#chart-svg").html(""); d3.select("#chart-legend").html(""); }
             }
 
             function drawChart(code) {
                 const data = historyByDep[code].sort((a,b)=>a.year-b.year);
-                const depName = depNames[code];
-                
-                d3.select("#chart-title").text(`Évolution de la production : ${depName} (${code})`);
-
                 d3.select("#chart-svg").html("");
-                
-                const margin = {top: 40, right: 30, bottom: 40, left: 70}, 
-                      w = 800 - margin.left - margin.right, 
-                      h = 350 - margin.top - margin.bottom;
-
-                const cSvg = d3.select("#chart-svg").append("svg")
-                    .attr("viewBox", `0 0 800 350`)
-                    .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
+                const margin = {top: 40, right: 30, bottom: 40, left: 70}, w = 800 - margin.left - margin.right, h = 350 - margin.top - margin.bottom;
+                const cSvg = d3.select("#chart-svg").append("svg").attr("viewBox", `0 0 800 350`).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
                 const x = d3.scaleLinear().domain([2009, 2018]).range([0, w]);
                 const y = d3.scaleLinear().domain([0, d3.max(data, d=>d.total)*1.1]).range([h, 0]);
-
-                cSvg.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(10).tickFormat(d3.format("d")));
-                
+                cSvg.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
                 cSvg.append("g").call(d3.axisLeft(y).tickFormat(d3.format("~s")));
-
-                cSvg.append("text")
-                    .attr("x", -50)
-                    .attr("y", -15)
-                    .style("font-size", "12px")
-                    .style("font-weight", "bold")
-                    .style("fill", "#7f8c8d")
-                    .text("Volume (Hectolitres)");
-
-                const types = [
-                    {k:"total", c:"#6a51a3", n: "Total"}, 
-                    {k:"blanc", c:"#238b45", n: "Vin Blanc"}, 
-                    {k:"rouge", c:"#cb181d", n: "Vin Rouge/Rosé"}
-                ];
-
-                const legend = d3.select("#chart-legend").html("");
+                
+                const types = [{k:"total", c:"#6a51a3"}, {k:"blanc", c:"#238b45"}, {k:"rouge", c:"#cb181d"}];
                 types.forEach(t => {
-                    const item = legend.append("div").attr("class", "legend-item");
-                    item.append("div").attr("class", "legend-color").style("background", t.c);
-                    item.append("span").text(t.n);
-                });
-
-                types.forEach(t => {
-                    cSvg.append("path").datum(data)
-                        .attr("class", `line`)
-                        .attr("stroke", t.c)
-                        .attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
-
-                    cSvg.selectAll(`.dot-${t.k}`).data(data).enter().append("circle")
-                        .attr("cx", d=>x(d.year)).attr("cy", d=>y(d[t.k])).attr("r", 5).attr("fill", t.c)
-                        .on("mouseover", (event, d) => {
-                            const rect = document.getElementById("chart-container").getBoundingClientRect();
-                            d3.select("#chart-tooltip").style("opacity", 1)
-                                .html(`<strong>${d.year}</strong><br>${t.n}: ${Math.round(d[t.k]).toLocaleString()} hl`)
-                                .style("left", (event.clientX-rect.left + 10)+"px").style("top", (event.clientY-rect.top - 40)+"px");
-                        })
-                        .on("mouseout", () => d3.select("#chart-tooltip").style("opacity", 0));
+                    cSvg.append("path").datum(data).attr("class", "line").attr("stroke", t.c).attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
                 });
             }
 
             function drawMiniChart(code, containerId) {
-                const data = historyByDep[code];
-                if (!data) return; 
-                
-                data.sort((a,b)=>a.year-b.year);
-                
-                const margin = {top: 10, right: 10, bottom: 20, left: 40},
-                      w = 400 - margin.left - margin.right,
-                      h = 150 - margin.top - margin.bottom;
-
-                const svg = d3.select(containerId).append("svg")
-                    .attr("viewBox", `0 0 400 150`)
-                    .append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
+                const data = historyByDep[code]?.sort((a,b)=>a.year-b.year);
+                if (!data) return;
+                const margin = {top: 10, right: 10, bottom: 20, left: 40}, w = 400 - margin.left - margin.right, h = 150 - margin.top - margin.bottom;
+                const svgM = d3.select(containerId).append("svg").attr("viewBox", `0 0 400 150`).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
                 const x = d3.scaleLinear().domain([2009, 2018]).range([0, w]);
                 const y = d3.scaleLinear().domain([0, d3.max(data, d=>d.total)*1.1]).range([h, 0]);
-
-                svg.append("g").attr("transform", `translate(0,${h})`)
-                   .call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("d")));
-                   
-                svg.append("g")
-                   .call(d3.axisLeft(y).ticks(3).tickFormat(d3.format("~s")));
-
-                const types = [
-                    {k:"total", c:"#6a51a3"}, 
-                    {k:"blanc", c:"#238b45"}, 
-                    {k:"rouge", c:"#cb181d"}
-                ];
-
-                types.forEach(t => {
-                    svg.append("path").datum(data)
-                        .attr("fill", "none")
-                        .attr("stroke", t.c)
-                        .attr("stroke-width", 2.5) 
-                        .attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
+                svgM.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("d")));
+                svgM.append("g").call(d3.axisLeft(y).ticks(3).tickFormat(d3.format("~s")));
+                [{k:"total", c:"#6a51a3"}, {k:"blanc", c:"#238b45"}, {k:"rouge", c:"#cb181d"}].forEach(t => {
+                    svgM.append("path").datum(data).attr("fill", "none").attr("stroke", t.c).attr("stroke-width", 2).attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
                 });
             }
 
-            function stopAnimation() {
-                clearInterval(animationTimer); animationTimer = null;
-                d3.select("#play-btn").text("Lecture").classed("playing", false);
-            }
+            function stopAnimation() { clearInterval(animationTimer); animationTimer = null; d3.select("#play-btn").text("Lecture"); }
 
             d3.select("#play-btn").on("click", function() {
                 if (animationTimer) stopAnimation();
                 else {
-                    d3.select(this).text("Pause").classed("playing", true);
                     animationTimer = setInterval(() => {
-                        let idx = sortedYears.indexOf(currentYear);
-                        currentYear = sortedYears[(idx + 1) % sortedYears.length];
+                        currentYear = currentYear >= 2018 ? 2009 : currentYear + 1;
                         update();
                     }, 1000);
+                    d3.select(this).text("Pause");
                 }
             });
 
@@ -633,11 +393,23 @@
             });
 
             update();
-            
             drawMiniChart("16", "#mini-chart-16"); 
-            drawMiniChart("17", "#mini-chart-17"); 
-            drawMiniChart("33", "#mini-chart-33"); // Ajout du mini-graphe Gironde
+            drawMiniChart("17", "#mini-chart-17");
 
+            const natData = sortedYears.map(yr => {
+                let t=0, b=0, r=0;
+                Object.values(dataByYear[yr]).forEach(d=>{t+=d.total; b+=d.blanc; r+=d.rouge;});
+                return {year:yr, total:t, blanc:b, rouge:r};
+            });
+            
+            const svgNat = d3.select("#mini-chart-total-france").append("svg").attr("viewBox", `0 0 500 200`).append("g").attr("transform", `translate(50,10)`);
+            const xN = d3.scaleLinear().domain([2009, 2018]).range([0, 440]);
+            const yN = d3.scaleLinear().domain([0, d3.max(natData, d=>d.total)*1.1]).range([170, 0]);
+            svgNat.append("g").attr("transform", `translate(0,170)`).call(d3.axisBottom(xN).tickFormat(d3.format("d")));
+            svgNat.append("g").call(d3.axisLeft(yN).tickFormat(d3.format("~s")));
+            [{k:"total", c:"#6a51a3"}, {k:"blanc", c:"#238b45"}, {k:"rouge", c:"#cb181d"}].forEach(t => {
+                svgNat.append("path").datum(natData).attr("fill", "none").attr("stroke", t.c).attr("stroke-width", 3).attr("d", d3.line().x(d=>xN(d.year)).y(d=>yN(d[t.k])));
+            });
         });
     </script>
 </body>
