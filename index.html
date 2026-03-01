@@ -78,8 +78,7 @@
         
         .pie path { stroke: #fff; stroke-width: 0.5px; opacity: 0.9; }
 
-        /* --- Styles pour la section Accordéon --- */
-        #did-you-know-section { width: 100%; margin-top: 20px; }
+                #did-you-know-section { width: 100%; margin-top: 20px; }
         .dyk-header { color: #2c3e50; margin-bottom: 15px; padding-left: 5px; }
         
         .accordion-item { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; overflow: hidden; border-left: 5px solid #34495e; }
@@ -107,7 +106,7 @@
                     <br><br>
                     • <strong>Interactivité :</strong> Cliquez sur un département sur la carte ou dans la liste pour afficher son historique. Cliquez à nouveau pour désélectionner.
                     <br><br>
-                    • <strong>Camemberts :</strong> Visibles en mode "Total", ils indiquent la proportion de vin blanc (vert) et rouge/rosé (rouge) pour chaque région.
+                    • <strong>Camemberts :</strong> Visibles en mode "Total", ils indiquent la proportion de vin blanc (jaune) et rouge/rosé (rouge) pour chaque région.
                     <br><br>
                     <strong>📊 Source :</strong>
                     <br>
@@ -312,6 +311,7 @@
                     const val = dataByYear[currentYear]?.[d.properties.code]?.[currentType] || 0;
                     return val >= 1 ? scale(val) : "#eee";
                 });
+                
 
                 if (currentType === "total") {
                     const pieGen = d3.pie().value(d => d.val).sort(null);
@@ -328,11 +328,73 @@
                     pies.exit().remove();
                 } else pieGroup.selectAll("g.pie").remove();
 
-                const topData = Object.keys(dataByYear[currentYear]||{}).map(c=>({code:c, nom:depNames[c], val:dataByYear[currentYear][c][currentType]})).filter(d=>d.val>0).sort((a,b)=>b.val-a.val);
+// --- REMPLACEZ LA FIN DE LA FONCTION update() PAR CE BLOC ---
+
+                // 1. Calcul du classement de l'année précédente (pour la comparaison)
+                let prevRankings = {};
+                const minYear = Math.min(...sortedYears);
+                
+                if (currentYear > minYear) {
+                    const prevYear = currentYear - 1;
+                    const prevData = Object.keys(dataByYear[prevYear] || {})
+                        .map(c => ({code: c, val: dataByYear[prevYear][c][currentType]}))
+                        .filter(d => d.val > 0)
+                        .sort((a, b) => b.val - a.val);
+                    
+                    // On enregistre la position de chaque département l'année d'avant
+                    prevData.forEach((d, i) => {
+                        prevRankings[d.code] = i + 1; 
+                    });
+                }
+
+                // 2. Calcul du classement de l'année actuelle
+                const topData = Object.keys(dataByYear[currentYear]||{})
+                    .map(c => ({code: c, nom: depNames[c], val: dataByYear[currentYear][c][currentType]}))
+                    .filter(d => d.val > 0)
+                    .sort((a,b) => b.val - a.val)
+                    .map((d, i) => ({...d, currentRank: i + 1})); // Ajout du rang actuel
+
                 const listData = showAllDepartments ? topData : topData.slice(0, 10);
-                const list = d3.select("#top10-list").selectAll("li").data(listData, d=>d.code);
-                list.join("li").attr("class", d => `dep-card ${selectedDepCode === d.code ? 'selected-item' : ''}`)
-                    .html((d, i) => `<div class="rank-badge">${i+1}</div><div class="dep-info"><span class="dep-name">${d.nom}</span><span class="dep-val">${Math.round(d.val).toLocaleString()} hl</span></div>`)
+                const list = d3.select("#top10-list").selectAll("li").data(listData, d => d.code);
+                
+                // 3. Mise à jour de l'affichage avec la tendance (les bouteilles)
+                list.join("li")
+                    .attr("class", d => `dep-card ${selectedDepCode === d.code ? 'selected-item' : ''}`)
+                    .html(d => {
+                        let trendHtml = '';
+                        
+                        // S'il y a une année précédente avec laquelle comparer
+                        if (currentYear > minYear) {
+                            const prevRank = prevRankings[d.code];
+                            
+                            if (prevRank) {
+                                const rankDiff = prevRank - d.currentRank; 
+                                
+                                if (rankDiff > 0) {
+                                    // A gagné des places : Bouteille verte + nombre
+                                    trendHtml = `<div class="trend-container"><span class="rank-diff diff-up">+${rankDiff}</span>${bottleSvg('bottle-up')}</div>`;
+                                } else if (rankDiff < 0) {
+                                    // A perdu des places : Bouteille rouge à l'envers + nombre
+                                    trendHtml = `<div class="trend-container"><span class="rank-diff diff-down">${rankDiff}</span>${bottleSvg('bottle-down')}</div>`;
+                                } else {
+                                    // Classement stable : Bouteille grise à l'horizontale
+                                    trendHtml = `<div class="trend-container">${bottleSvg('bottle-steady')}</div>`;
+                                }
+                            } else {
+                                // N'était pas classé l'année d'avant (nouvelle entrée)
+                                trendHtml = `<div class="trend-container"><span class="rank-diff diff-up">Entrée</span>${bottleSvg('bottle-up')}</div>`;
+                            }
+                        }
+
+                        return `
+                            <div class="rank-badge">${d.currentRank}</div>
+                            <div class="dep-info">
+                                <span class="dep-name">${d.nom}</span>
+                                <span class="dep-val">${Math.round(d.val).toLocaleString()} hl</span>
+                            </div>
+                            ${trendHtml}
+                        `;
+                    })
                     .on("click", (e, d) => selectDepartment(d.code));
             }
 
