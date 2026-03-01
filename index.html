@@ -5,7 +5,7 @@
     <title>Analyse Viticole Interactive</title>
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
-        body { font-family: 'Open Sans', sans-serif; background-color: #779a74; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        body { font-family: 'Open Sans', sans-serif; background-color: #edcde7a8; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
         #dashboard { max-width: 1200px; width: 100%; }
         
         #controls { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; position: relative; }
@@ -22,13 +22,13 @@
         .type-btn { background-color: #e0e0e0; }
         .type-btn.active { background-color: #34495e; color: white; }
         
-        #play-btn { background-color: #27ae60; color: white; margin-right: 20px; }
-        #play-btn.playing { background-color: #e67e22; }
+        #play-btn { background-color: black; color: white; margin-right: 20px; }
+        #play-btn.playing { background-color: #edcde7a8; }
 
         .timeline-wrapper { display: inline-flex; align-items: center; background: #f0f2f5; padding: 5px; border-radius: 30px; }
         .year-tick { padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9em; font-weight: bold; color: #7f8c8d; transition: all 0.3s; }
         .year-tick:hover { background: #dfe4ea; color: #2c3e50; }
-        .year-tick.active { background: #e74c3c; color: white; box-shadow: 0 2px 5px rgba(231, 76, 60, 0.4); }
+        .year-tick.active { background: #edcde7a8; color: black; box-shadow: 0 2px 5px rgba(231, 76, 60, 0.4); }
 
         .main-content { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; align-items: stretch; }
         #map-container { flex: 2; background: white; border-radius: 8px; padding: 10px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
@@ -82,7 +82,7 @@
         .dyk-header { color: #2c3e50; margin-bottom: 15px; padding-left: 5px; }
         
         .accordion-item { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; overflow: hidden; border-left: 5px solid #34495e; }
-        .accordion-header { padding: 15px 20px; background-color: #fff; color: #2c3e50; font-weight: bold; font-size: 1.1em; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s; }
+        .accordion-header { padding: 15px 20px; background-color: #fff; color: black; font-weight: bold; font-size: 1.1em; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s; }
         .accordion-header:hover { background-color: #f8f9fa; }
         .accordion-icon { transition: transform 0.3s ease; font-size: 1.2em; }
         .accordion-item.active .accordion-icon { transform: rotate(45deg); }
@@ -93,6 +93,56 @@
         .mini-charts-wrapper { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;}
         .mini-chart-card { flex: 1; min-width: 250px; max-width: 400px; background: #fff; border-radius: 8px; padding: 10px; border: 1px solid #dcdde1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
         .mini-chart-card h4 { margin: 0 0 5px 0; text-align: center; color: #2c3e50; font-size: 0.9em; }
+
+        /* --- Bas de page (3 colonnes) --- */
+        #dashboard-footer {
+            width: 100%;
+            background-color: black; /* Lie-de-vin */
+            color: white;
+            padding: 30px 50px;
+            display: flex;
+            justify-content: space-between; /* Aligne les colonnes à gauche, au centre et à droite */
+            align-items: flex-start;
+            box-sizing: border-box;
+            margin-top: 40px;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .footer-column {
+            flex: 1; /* Donne une largeur égale aux trois colonnes */
+        }
+
+        .footer-left { text-align: left; }
+        .footer-center { text-align: center; }
+        .footer-right { text-align: right; }
+
+        .tagline {
+            color: #edcde7a8; /* Doré */
+            font-weight: bold;
+            letter-spacing: 1.5px;
+            font-size: 0.75em;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+        }
+
+        .footer-column h4 {
+            margin: 5px 0;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .footer-column p, .footer-column a {
+            margin: 4px 0;
+            font-size: 0.85em;
+            opacity: 0.9;
+            color: white;
+            text-decoration: none;
+        }
+
+        .footer-column a:hover {
+            text-decoration: underline;
+            color: #edcde7a8;
+        }
     </style>
 </head>
 <body>
@@ -190,17 +240,6 @@
                     </div>
                     <p>L'année 2017 a connu la plus faible récolte nationale depuis 1945.</p>
                     <p><strong>La cause :</strong> Un épisode de <strong>gel noir sévère fin avril</strong> ayant touché la quasi-totalité des bassins viticoles français simultanément.</p>
-                </div>
-            </div>
-
-            <div class="accordion-item">
-                <div class="accordion-header">
-                    Qui sommes nous ? 
-                    <span class="accordion-icon">+</span>
-                </div>
-                <div class="accordion-content">
-                    <p>Léa Serval et Martin Crabeil</p>
-                    <p>Retrouvez l'intégralité du code source ici : <a href="https://github.com/Lserval/projetVizu" target="_blank">Projet de Visualisation (GitHub)</a></p>
                 </div>
             </div>
         </div>
@@ -475,4 +514,27 @@
         });
     </script>
 </body>
+<footer id="dashboard-footer">
+    <div class="footer-column footer-left">
+        <div class="tagline">CODE SOURCE</div>
+        <p> Retrouvez l'intégralité de notre projet Github sur
+            <a href="https://github.com/Lserval/projetVizu" target="_blank">
+                ce lien
+            </a>
+        </p>
+    </div>
+
+    <div class="footer-column footer-center">
+        <div class="tagline">PROJET ACADÉMIQUE</div>
+        <h4>MOS_09_1 - Visualisation interactive de données</h4>
+        <p>École Centrale de Lyon · 2026</p>
+        <p>Encadrant : <strong>Romain Vuillemot</strong></p>
+    </div>
+
+    <div class="footer-column footer-right">
+        <div class="tagline">AUTEURS</div>
+        <p>Léa Serval</p>
+        <p>Martin Crabeil</p>
+    </div>
+</footer>
 </html>
