@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <title>Analyse Viticole Interactive</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: 'Open Sans', sans-serif; background-color: #779a74; display: flex; flex-direction: column; align-items: center; padding: 20px; margin: 0; }
+        #dashboard { max-width: 1200px; width: 100%; }
+        
+        #controls { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; position: relative; }
+        
+        .info-container { position: absolute; top: 20px; right: 20px; z-index: 1000; }
+        .info-btn { width: 30px; height: 30px; background-color: #34495e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 1.2em; cursor: pointer; border: none; transition: background-color 0.2s; outline: none; }
+        .info-btn:hover { background-color: #2c3e50; }
+        
+        .info-content { visibility: hidden; opacity: 0; position: absolute; top: 45px; right: 0; width: 300px; background: rgba(255, 255, 255, 0.98); color: #2f3542; padding: 15px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); font-size: 0.9em; text-align: left; transition: all 0.3s ease; border: 1px solid #edf2f7; }
+        .info-content.show { visibility: visible; opacity: 1; top: 40px; }
+
+        .btn-group { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; }
+        .type-btn, #play-btn { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; transition: all 0.2s; }
+        .type-btn { background-color: #e0e0e0; }
+        .type-btn.active { background-color: #34495e; color: white; }
+        
+        #play-btn { background-color: #27ae60; color: white; margin-right: 20px; }
+        #play-btn.playing { background-color: #e67e22; }
+
+        .timeline-wrapper { display: inline-flex; align-items: center; background: #f0f2f5; padding: 5px; border-radius: 30px; }
+        .year-tick { padding: 8px 16px; border-radius: 20px; cursor: pointer; font-size: 0.9em; font-weight: bold; color: #7f8c8d; transition: all 0.3s; }
+        .year-tick:hover { background: #dfe4ea; color: #2c3e50; }
+        .year-tick.active { background: #e74c3c; color: white; box-shadow: 0 2px 5px rgba(231, 76, 60, 0.4); }
+
+        .main-content { display: flex; gap: 20px; justify-content: center; margin-bottom: 20px; align-items: stretch; }
+        #map-container { flex: 2; background: white; border-radius: 8px; padding: 10px; position: relative; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        
+        #map-legend { position: absolute; bottom: 20px; right: 20px; background: rgba(255, 255, 255, 0.95); padding: 15px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.15); pointer-events: none; z-index: 500; border: 1px solid #edf2f7; }
+        .legend-title { font-size: 0.85em; font-weight: bold; color: #2c3e50; margin-bottom: 8px; text-align: center; }
+        .legend-bar { height: 12px; width: 180px; border-radius: 6px; border: 1px solid #dcdde1; margin-bottom: 5px; }
+        .legend-labels { display: flex; justify-content: space-between; font-size: 0.8em; color: #7f8c8d; font-weight: bold; }
+
+        #top10-container { flex: 1; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); min-width: 320px; display: flex; flex-direction: column; }
+        
+        #top10-list { list-style: none; padding: 0; margin: 0; max-height: 480px; overflow-y: auto; padding-right: 5px; scrollbar-width: thin; flex-grow: 1; }
+        #top10-list::-webkit-scrollbar { width: 6px; }
+        #top10-list::-webkit-scrollbar-thumb { background-color: #bdc3c7; border-radius: 10px; }
+        
+        .dep-card { display: flex; align-items: center; padding: 10px 15px; margin-bottom: 10px; background: #fff; border: 1px solid #edf2f7; border-radius: 10px; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); cursor: pointer; }
+        .dep-card:hover { transform: scale(1.02); box-shadow: 0 4px 12px rgba(0,0,0,0.08); background: #f8f9fa; }
+        .dep-card.selected-item { border-color: #34495e; background: #ebf2ff; }
+
+        .rank-badge { min-width: 28px; height: 28px; background: #34495e; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9em; font-weight: bold; margin-right: 15px; padding: 0 5px; }
+        .dep-info { flex-grow: 1; }
+        .dep-name { display: block; font-weight: bold; font-size: 1em; color: #2d3436; }
+        .dep-val { font-size: 0.9em; color: #d63031; font-weight: bold; }
+        
+        .trend-container { display: flex; align-items: center; gap: 5px; min-width: 45px; justify-content: flex-end; }
+        .wine-icon { width: 22px; height: 22px; transition: all 0.5s ease; }
+        .bottle-up { fill: #27ae60; }
+        .bottle-steady { fill: #b2bec3; transform: rotate(90deg); }
+        .bottle-down { fill: #e17055; transform: rotate(180deg); }
+        
+        .rank-diff { font-size: 0.8em; font-weight: bold; }
+        .diff-up { color: #27ae60; }
+        .diff-down { color: #e17055; }
+
+        #toggle-list-btn { width: 100%; padding: 12px; margin-top: 15px; background-color: #f1f2f6; border: 1px solid #dfe4ea; border-radius: 5px; cursor: pointer; font-weight: bold; color: #2f3542; transition: all 0.2s; }
+        #toggle-list-btn:hover { background-color: #dfe4ea; }
+
+        #chart-container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box; min-height: 450px; position: relative; margin-bottom: 20px;}
+        path.dep { stroke: #fff; stroke-width: 0.5px; cursor: pointer; } 
+        path.selected { stroke: #e74c3c; stroke-width: 3px; }
+        .tooltip { position: absolute; background: rgba(255, 255, 255, 0.98); border: 1px solid #333; padding: 12px; border-radius: 6px; pointer-events: none; opacity: 0; z-index: 1000; font-size: 13px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        
+        .line { fill: none; stroke-width: 3; transition: 0.3s; }
+        .legend-container { display: flex; justify-content: center; gap: 20px; margin-top: 10px; font-size: 0.9em; font-weight: bold; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 15px; height: 15px; border-radius: 3px; }
+        
+        .pie path { stroke: #fff; stroke-width: 0.5px; opacity: 0.9; }
+
+                #did-you-know-section { width: 100%; margin-top: 20px; }
+        .dyk-header { color: #2c3e50; margin-bottom: 15px; padding-left: 5px; }
+        
+        .accordion-item { background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 10px; overflow: hidden; border-left: 5px solid #34495e; }
+        .accordion-header { padding: 15px 20px; background-color: #fff; color: #2c3e50; font-weight: bold; font-size: 1.1em; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background-color 0.2s; }
+        .accordion-header:hover { background-color: #f8f9fa; }
+        .accordion-icon { transition: transform 0.3s ease; font-size: 1.2em; }
+        .accordion-item.active .accordion-icon { transform: rotate(45deg); }
+        .accordion-content { padding: 0 20px; max-height: 0; overflow: hidden; transition: max-height 0.4s ease-out, padding 0.4s ease-out; color: #34495e; line-height: 1.6; background-color: #fafbfc; }
+        .accordion-item.active .accordion-content { padding: 20px; max-height: 1200px; }
+
+        .highlight-dep { background-color: #e0e6ed; padding: 2px 6px; border-radius: 4px; font-weight: bold; color: #c0392b; }
+        .mini-charts-wrapper { display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap; justify-content: center;}
+        .mini-chart-card { flex: 1; min-width: 250px; max-width: 400px; background: #fff; border-radius: 8px; padding: 10px; border: 1px solid #dcdde1; box-shadow: 0 1px 3px rgba(0,0,0,0.05);}
+        .mini-chart-card h4 { margin: 0 0 5px 0; text-align: center; color: #2c3e50; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <div id="dashboard">
+        <div id="controls">
+            <div class="info-container">
+                <button class="info-btn" id="info-toggle-btn">?</button>
+                <div class="info-content" id="info-popup">
+                    <strong>📌 Guide & Informations</strong>
+                    <br><br>
+                    • <strong>Interactivité :</strong> Cliquez sur un département sur la carte ou dans la liste pour afficher son historique. Cliquez à nouveau pour désélectionner.
+                    <br><br>
+                    • <strong>Camemberts :</strong> Visibles en mode "Total", ils indiquent la proportion de vin blanc (jaune) et rouge/rosé (rouge) pour chaque région.
+                    <br><br>
+                    <strong>📊 Source :</strong>
+                    <br>
+                    Données issues du site du gouvernement <em>https://www.data.gouv.fr/datasets/statistiques-viti-vinicoles-releves-annuels-des-stocks-et-des-recoltes-depuis-2009</em>.
+                </div>
+            </div>
+            
+            <h2>🍷 Analyse Viticole de la France</h2>
+            <div class="btn-group">
+                <button class="type-btn active" data-type="total">Total</button>
+                <button class="type-btn" data-type="blanc">Vin Blanc</button>
+                <button class="type-btn" data-type="rouge">Vin Rouge et Rosé</button>
+            </div>
+            <div style="display: flex; align-items: center; justify-content: center;">
+                <button id="play-btn">Lecture</button>
+                <div class="timeline-wrapper" id="timeline"></div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div id="map-container">
+                <div id="tooltip" class="tooltip"></div>
+                <div id="map-legend">
+                    <div class="legend-title">Production (Hectolitres)</div>
+                    <div id="map-legend-bar" class="legend-bar"></div>
+                    <div class="legend-labels">
+                        <span>0</span>
+                        <span id="map-legend-max"></span>
+                    </div>
+                </div>
+            </div>
+            <div id="top10-container">
+                <h3 id="list-title">🏆 Top 10 Producteurs 🏆</h3>
+                <ul id="top10-list"></ul>
+                <button id="toggle-list-btn">Voir tous les départements</button>
+            </div>
+        </div>
+
+        <div id="chart-container">
+            <h3 id="chart-title" style="text-align: center; color: #2c3e50;">Sélectionnez un département sur la carte ou le classement</h3>
+            <div id="chart-tooltip" class="tooltip"></div>
+            <div id="chart-svg"></div>
+            <div class="legend-container" id="chart-legend"></div>
+        </div>
+
+        <div id="did-you-know-section">
+            <h2 class="dyk-header">Informations supplémentaires</h2>
+            
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    L'anomalie statistique de la région de Cognac
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="mini-charts-wrapper">
+                        <div class="mini-chart-card">
+                            <h4>Charente (16)</h4>
+                            <div id="mini-chart-16"></div>
+                        </div>
+                        <div class="mini-chart-card">
+                            <h4>Charente-Maritime (17)</h4>
+                            <div id="mini-chart-17"></div>
+                        </div>
+                    </div>
+                    <p>En observant les graphiques de la <span class="highlight-dep">Charente (16)</span> et de la <span class="highlight-dep">Charente-Maritime (17)</span>, on remarque une rupture soudaine en 2012.</p>
+                    <p><strong>Explication :</strong> Cette variation brutale est due à un <strong>changement de réglementation (Décret n° 2011-685)</strong>. Les vins destinés à la distillation pour le Cognac ont été extraits des statistiques générales de "vin blanc" pour être comptabilisés à part.</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    Le gel du printemps 2017 : Impact National
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <div class="mini-charts-wrapper">
+                        <div class="mini-chart-card" style="max-width: 600px;">
+                            <h4>Production Totale Française (Tous départements cumulés)</h4>
+                            <div id="mini-chart-total-france"></div>
+                        </div>
+                    </div>
+                    <p>L'année 2017 a connu la plus faible récolte nationale depuis 1945.</p>
+                    <p><strong>La cause :</strong> Un épisode de <strong>gel noir sévère fin avril</strong> ayant touché la quasi-totalité des bassins viticoles français simultanément.</p>
+                </div>
+            </div>
+
+            <div class="accordion-item">
+                <div class="accordion-header">
+                    Qui sommes nous ? 
+                    <span class="accordion-icon">+</span>
+                </div>
+                <div class="accordion-content">
+                    <p>Léa Serval et Martin Crabeil</p>
+                    <p>Retrouvez l'intégralité du code source ici : <a href="https://github.com/Lserval/projetVizu" target="_blank">Projet de Visualisation (GitHub)</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Gestion de l'Accordéon ---
+        const accordionHeaders = document.querySelectorAll('.accordion-header');
+        accordionHeaders.forEach(header => {
+            header.addEventListener('click', function() {
+                this.parentElement.classList.toggle('active');
+            });
+        });
+
+        // --- Info Popup ---
+        const infoBtn = document.getElementById('info-toggle-btn');
+        const infoPopup = document.getElementById('info-popup');
+
+        infoBtn.addEventListener('click', function(e) {
+            infoPopup.classList.toggle('show');
+            e.stopPropagation();
+        });
+
+        document.addEventListener('click', function() {
+            infoPopup.classList.remove('show');
+        });
+
+        // --- D3.js Logic ---
+        const width = 800, height = 600;
+        let currentType = "total", currentYear = 2009;
+        let animationTimer = null, selectedDepCode = null;
+        let showAllDepartments = false;
+
+        const bottleSvg = (className) => `
+            <svg class="wine-icon ${className}" viewBox="0 0 24 24">
+                <path d="M12,2L10,2V5L9,6V10L7,11V21C7,21.55 7.45,22 8,22H16C16.55,22 17,21.55 17,21V11L15,10V6L14,5V2H12M12,4H13V5H11V4H12M10,8H14V9.5L15,10.25V11H9V10.25L10,9.5V8M9,13H15V20H9V13Z" />
+            </svg>`;
+
+        const svg = d3.select("#map-container").append("svg").attr("viewBox", `0 0 ${width} ${height}`);
+        const projection = d3.geoConicConformal().center([2.454071, 46.279229]).scale(3000).translate([width/2, height/2]);
+        const pathGenerator = d3.geoPath().projection(projection);
+
+        const mapGroup = svg.append("g").attr("id", "map-paths");
+        const pieGroup = svg.append("g").attr("id", "map-pies").style("pointer-events", "none");
+
+        Promise.all([
+            d3.json("https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson"),
+            d3.csv("production_vins_2009_2018.csv")
+        ]).then(([france, csvData]) => {
+            
+            const depNames = {};
+            france.features.forEach(d => depNames[d.properties.code] = d.properties.nom);
+
+            const dataByYear = {}, historyByDep = {};
+            let years = new Set();
+            csvData.forEach(row => {
+                const yr = parseInt(row.Year), code = row.Dept_Code;
+                years.add(yr);
+                if (!dataByYear[yr]) dataByYear[yr] = {};
+                dataByYear[yr][code] = { blanc: +row.tot_blanc||0, rouge: +row.tot_rougerose||0, total: +row.tot_rougerose + +row.tot_blanc||0 };
+                if (!historyByDep[code]) historyByDep[code] = [];
+                historyByDep[code].push({ year: yr, blanc: +row.tot_blanc||0, rouge: +row.tot_rougerose||0, total: +row.tot_rougerose + +row.tot_blanc||0 });
+            });
+
+            const sortedYears = Array.from(years).sort();
+
+            const timeline = d3.select("#timeline");
+            timeline.selectAll(".year-tick")
+                .data(sortedYears).enter().append("div")
+                .attr("class", d => d === currentYear ? "year-tick active" : "year-tick")
+                .text(d => d)
+                .on("click", (event, d) => { currentYear = d; update(); stopAnimation(); });
+
+            d3.select("#toggle-list-btn").on("click", function() {
+                showAllDepartments = !showAllDepartments;
+                d3.select(this).text(showAllDepartments ? "Voir seulement le Top 10" : "Voir tous les départements");
+                d3.select("#list-title").text(showAllDepartments ? "🍷 Classement Complet 🍷" : "🏆 Top 10 Producteurs 🏆");
+                update();
+            });
+
+            const colorScales = {
+                total: d3.scaleSequentialLog().domain([1, 10000000]).interpolator(d3.interpolatePurples),
+                blanc: d3.scaleSequentialLog().domain([1, 6000000]).interpolator(d3.interpolateYlGn),
+                rouge: d3.scaleSequentialLog().domain([1, 6000000]).interpolator(d3.interpolateReds)
+            };
+
+            const mapPaths = mapGroup.selectAll("path")
+                .data(france.features).join("path").attr("class", "dep").attr("d", pathGenerator)
+                .on("mousemove", (event, d) => {
+                    const info = dataByYear[currentYear]?.[d.properties.code] || {blanc:0, rouge:0, total:0};
+                    const rect = document.getElementById("map-container").getBoundingClientRect();
+                    d3.select("#tooltip").style("opacity", 1).html(`<strong>${d.properties.nom}</strong><br>Production: ${Math.round(info[currentType]).toLocaleString()} hl`)
+                        .style("left", (event.clientX - rect.left + 15) + "px").style("top", (event.clientY - rect.top - 15) + "px");
+                }).on("mouseout", () => d3.select("#tooltip").style("opacity", 0))
+                .on("click", (e, d) => selectDepartment(d.properties.code));
+
+            function update() {
+                d3.selectAll(".year-tick").classed("active", d => d === currentYear);
+                const scale = colorScales[currentType];
+                const maxDomain = scale.domain()[1];
+                
+                let stops = [];
+                for (let i = 0; i <= 10; i++) stops.push(scale.interpolator()(i / 10));
+                d3.select("#map-legend-bar").style("background", `linear-gradient(to right, ${stops.join(", ")})`);
+                d3.select("#map-legend-max").text(maxDomain >= 1000000 ? (maxDomain/1000000)+"M" : maxDomain);
+
+                mapPaths.attr("fill", d => {
+                    const val = dataByYear[currentYear]?.[d.properties.code]?.[currentType] || 0;
+                    return val >= 1 ? scale(val) : "#eee";
+                });
+                
+
+                if (currentType === "total") {
+                    const pieGen = d3.pie().value(d => d.val).sort(null);
+                    const arcGen = d3.arc().innerRadius(0).outerRadius(8);
+                    const validFeatures = france.features.filter(d => dataByYear[currentYear]?.[d.properties.code]?.total > 0);
+                    const pies = pieGroup.selectAll("g.pie").data(validFeatures, d => d.properties.code);
+                    const piesEnter = pies.enter().append("g").attr("class", "pie").attr("transform", d => `translate(${pathGenerator.centroid(d)})`);
+                    const allPies = piesEnter.merge(pies);
+                    const paths = allPies.selectAll("path").data(d => {
+                        const info = dataByYear[currentYear][d.properties.code];
+                        return pieGen([{val: info.blanc, color: '#f5ee6e'}, {val: info.rouge, color: '#cb181d'}]);
+                    });
+                    paths.join("path").attr("d", arcGen).attr("fill", d => d.data.color);
+                    pies.exit().remove();
+                } else pieGroup.selectAll("g.pie").remove();
+
+// --- REMPLACEZ LA FIN DE LA FONCTION update() PAR CE BLOC ---
+
+                // 1. Calcul du classement de l'année précédente (pour la comparaison)
+                let prevRankings = {};
+                const minYear = Math.min(...sortedYears);
+                
+                if (currentYear > minYear) {
+                    const prevYear = currentYear - 1;
+                    const prevData = Object.keys(dataByYear[prevYear] || {})
+                        .map(c => ({code: c, val: dataByYear[prevYear][c][currentType]}))
+                        .filter(d => d.val > 0)
+                        .sort((a, b) => b.val - a.val);
+                    
+                    // On enregistre la position de chaque département l'année d'avant
+                    prevData.forEach((d, i) => {
+                        prevRankings[d.code] = i + 1; 
+                    });
+                }
+
+                // 2. Calcul du classement de l'année actuelle
+                const topData = Object.keys(dataByYear[currentYear]||{})
+                    .map(c => ({code: c, nom: depNames[c], val: dataByYear[currentYear][c][currentType]}))
+                    .filter(d => d.val > 0)
+                    .sort((a,b) => b.val - a.val)
+                    .map((d, i) => ({...d, currentRank: i + 1})); // Ajout du rang actuel
+
+                const listData = showAllDepartments ? topData : topData.slice(0, 10);
+                const list = d3.select("#top10-list").selectAll("li").data(listData, d => d.code);
+                
+                // 3. Mise à jour de l'affichage avec la tendance (les bouteilles)
+                list.join("li")
+                    .attr("class", d => `dep-card ${selectedDepCode === d.code ? 'selected-item' : ''}`)
+                    .html(d => {
+                        let trendHtml = '';
+                        
+                        // S'il y a une année précédente avec laquelle comparer
+                        if (currentYear > minYear) {
+                            const prevRank = prevRankings[d.code];
+                            
+                            if (prevRank) {
+                                const rankDiff = prevRank - d.currentRank; 
+                                
+                                if (rankDiff > 0) {
+                                    // A gagné des places : Bouteille verte + nombre
+                                    trendHtml = `<div class="trend-container"><span class="rank-diff diff-up">+${rankDiff}</span>${bottleSvg('bottle-up')}</div>`;
+                                } else if (rankDiff < 0) {
+                                    // A perdu des places : Bouteille rouge à l'envers + nombre
+                                    trendHtml = `<div class="trend-container"><span class="rank-diff diff-down">${rankDiff}</span>${bottleSvg('bottle-down')}</div>`;
+                                } else {
+                                    // Classement stable : Bouteille grise à l'horizontale
+                                    trendHtml = `<div class="trend-container">${bottleSvg('bottle-steady')}</div>`;
+                                }
+                            } else {
+                                // N'était pas classé l'année d'avant (nouvelle entrée)
+                                trendHtml = `<div class="trend-container"><span class="rank-diff diff-up">Entrée</span>${bottleSvg('bottle-up')}</div>`;
+                            }
+                        }
+
+                        return `
+                            <div class="rank-badge">${d.currentRank}</div>
+                            <div class="dep-info">
+                                <span class="dep-name">${d.nom}</span>
+                                <span class="dep-val">${Math.round(d.val).toLocaleString()} hl</span>
+                            </div>
+                            ${trendHtml}
+                        `;
+                    })
+                    .on("click", (e, d) => selectDepartment(d.code));
+            }
+
+            function selectDepartment(code) {
+                selectedDepCode = (selectedDepCode === code) ? null : code;
+                d3.selectAll(".dep").classed("selected", d => d.properties.code === selectedDepCode);
+                update();
+                if (selectedDepCode) drawChart(selectedDepCode);
+                else { d3.select("#chart-svg").html(""); d3.select("#chart-legend").html(""); }
+            }
+
+            function drawChart(code) {
+                const data = historyByDep[code].sort((a,b)=>a.year-b.year);
+                d3.select("#chart-svg").html("");
+                const margin = {top: 40, right: 30, bottom: 40, left: 70}, w = 800 - margin.left - margin.right, h = 350 - margin.top - margin.bottom;
+                const cSvg = d3.select("#chart-svg").append("svg").attr("viewBox", `0 0 800 350`).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+                const x = d3.scaleLinear().domain([2009, 2018]).range([0, w]);
+                const y = d3.scaleLinear().domain([0, d3.max(data, d=>d.total)*1.1]).range([h, 0]);
+                cSvg.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).tickFormat(d3.format("d")));
+                cSvg.append("g").call(d3.axisLeft(y).tickFormat(d3.format("~s")));
+                
+                const types = [{k:"total", c:"#6a51a3"}, {k:"blanc", c:"#238b45"}, {k:"rouge", c:"#cb181d"}];
+                types.forEach(t => {
+                    cSvg.append("path").datum(data).attr("class", "line").attr("stroke", t.c).attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
+                });
+            }
+
+            function drawMiniChart(code, containerId) {
+                const data = historyByDep[code]?.sort((a,b)=>a.year-b.year);
+                if (!data) return;
+                const margin = {top: 10, right: 10, bottom: 20, left: 40}, w = 400 - margin.left - margin.right, h = 150 - margin.top - margin.bottom;
+                const svgM = d3.select(containerId).append("svg").attr("viewBox", `0 0 400 150`).append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+                const x = d3.scaleLinear().domain([2009, 2018]).range([0, w]);
+                const y = d3.scaleLinear().domain([0, d3.max(data, d=>d.total)*1.1]).range([h, 0]);
+                svgM.append("g").attr("transform", `translate(0,${h})`).call(d3.axisBottom(x).ticks(5).tickFormat(d3.format("d")));
+                svgM.append("g").call(d3.axisLeft(y).ticks(3).tickFormat(d3.format("~s")));
+                [{k:"total", c:"#6a51a3"}, {k:"blanc", c:"#238b45"}, {k:"rouge", c:"#cb181d"}].forEach(t => {
+                    svgM.append("path").datum(data).attr("fill", "none").attr("stroke", t.c).attr("stroke-width", 2).attr("d", d3.line().x(d=>x(d.year)).y(d=>y(d[t.k])));
+                });
+            }
+
+            function stopAnimation() { clearInterval(animationTimer); animationTimer = null; d3.select("#play-btn").text("Lecture"); }
+
+            d3.select("#play-btn").on("click", function() {
+                if (animationTimer) stopAnimation();
+                else {
+                    animationTimer = setInterval(() => {
+                        currentYear = currentYear >= 2018 ? 2009 : currentYear + 1;
+                        update();
+                    }, 1000);
+                    d3.select(this).text("Pause");
+                }
+            });
+
+            d3.selectAll(".type-btn").on("click", function() {
+                d3.selectAll(".type-btn").classed("active", false); d3.select(this).classed("active", true);
+                currentType = d3.select(this).attr("data-type"); update();
+            });
+
+            update();
+            drawMiniChart("16", "#mini-chart-16"); 
+            drawMiniChart("17", "#mini-chart-17");
+
+            const natData = sortedYears.map(yr => {
+                let t=0, b=0, r=0;
+                Object.values(dataByYear[yr]).forEach(d=>{t+=d.total; b+=d.blanc; r+=d.rouge;});
+                return {year:yr, total:t, blanc:b, rouge:r};
+            });
+            
+            const svgNat = d3.select("#mini-chart-total-france").append("svg").attr("viewBox", `0 0 500 200`).append("g").attr("transform", `translate(50,10)`);
+            const xN = d3.scaleLinear().domain([2009, 2018]).range([0, 440]);
+            const yN = d3.scaleLinear().domain([0, d3.max(natData, d=>d.total)*1.1]).range([170, 0]);
+            svgNat.append("g").attr("transform", `translate(0,170)`).call(d3.axisBottom(xN).tickFormat(d3.format("d")));
+            svgNat.append("g").call(d3.axisLeft(yN).tickFormat(d3.format("~s")));
+            [{k:"total", c:"#6a51a3"}, {k:"blanc", c:"#238b45"}, {k:"rouge", c:"#cb181d"}].forEach(t => {
+                svgNat.append("path").datum(natData).attr("fill", "none").attr("stroke", t.c).attr("stroke-width", 3).attr("d", d3.line().x(d=>xN(d.year)).y(d=>yN(d[t.k])));
+            });
+        });
+    </script>
+</body>
+</html>
