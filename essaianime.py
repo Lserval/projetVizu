@@ -6,7 +6,7 @@ import os
 
 # 1. Chargement des données regroupées
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
-df = pd.read_csv('production_vins_2009_2018.csv')
+df = pd.read_csv('production_vins_2009_2018_v2.csv')
 
 # 2. Récupération du GeoJSON
 geojson_url = "https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson"

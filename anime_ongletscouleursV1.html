@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Production Viticole Française</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .header { text-align: center; margin-bottom: 20px; }
+        #map-container { width: 100%; height: 700px; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            padding: 10px 20px; border: 2px solid #ddd; background: white;
+            cursor: pointer; border-radius: 25px; font-weight: bold; color: #666; transition: 0.3s;
+        }
+        .tab-btn.active {
+            background-color: #ffcccc !important; 
+            border-color: #ff4d4d !important;
+            color: #b30000 !important;
+        }
+        #loader { text-align: center; font-style: italic; color: #666; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Production Viticole Française entre 2009 et 2018</h1>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchType(0, this)">Toutes couleurs</button>
+            <button class="tab-btn" onclick="switchType(1, this)">Rouge & Rosé</button>
+            <button class="tab-btn" onclick="switchType(2, this)"> Blanc</button>
+        </div>
+    </div>
+
+    <div id="loader">Chargement des données...</div>
+    <div id="map-container"></div>
+
+    <script>
+        const csvFile = 'production_vins_2009_2018_v2.csv';
+        const geojsonUrl = 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson';
+
+        // Variables globales accessibles par switchType
+        let globalData, years, wineTypes;
+
+        async function init() {
+            try {
+                const [data, geojson] = await Promise.all([
+                    d3.csv(csvFile),
+                    d3.json(geojsonUrl)
+                ]);
+
+                globalData = data;
+                document.getElementById('loader').style.display = 'none';
+                years = [...new Set(data.map(d => d.Year))].sort();
+                
+                wineTypes = [
+                    { label: 'Total toutes couleurs', col: 'total_prod', colorscale: 'Viridis' },
+                    { label: 'Rouge & Rosé', col: 'tot_rougerose', colorscale: 'Reds' },
+                    { label: 'Vin Blanc', col: 'tot_blanc', colorscale: 'Tealgrn' }
+                ];
+
+                const frames = years.map(year => {
+                    const yearData = data.filter(d => d.Year === year);
+                    return {
+                        name: year,
+                        data: wineTypes.map(type => ({
+                            z: yearData.map(d => parseFloat(d[type.col]) || 0),
+                            locations: yearData.map(d => d.Dept_Code)
+                        }))
+                    };
+                });
+
+                const traces = wineTypes.map((type, i) => ({
+                    type: 'choropleth',
+                    geojson: geojson,
+                    featureidkey: 'properties.code',
+                    locations: data.filter(d => d.Year === years[0]).map(d => d.Dept_Code),
+                    z: data.filter(d => d.Year === years[0]).map(d => parseFloat(d[type.col]) || 0),
+                    text: data.filter(d => d.Year === years[0]).map(d => d.Departements),
+                    colorscale: type.colorscale,
+                    visible: i === 0,
+                    zmin: 0,
+                    zmax: 1000000,
+                    colorbar: { title: 'Hl', x: 1, len: 0.5 },
+                    hovertemplate: `<b>%{text}</b><br>Prod: %{z:,.0f} hl<extra></extra>`
+                }));
+
+                const layout = {
+                    geo: {
+                        projection: { type: 'mercator' }, // On laisse la projection Mercator
+                        center: { lat: 46.5, lon: 2.4 }, // Centre de la France
+                        fitbounds: "locations",          // FORCE LE CADRAGE SUR TOUS LES DÉPARTEMENTS
+                        visible: true,
+                        resolution: 50,
+                        showframe: false,
+                        showcoastlines: true,
+                        coastlinecolor: "#444"
+                    },
+                    margin: { t: 20, b: 100, l: 0, r: 0 },
+                    updatemenus: [{
+                        type: 'buttons', x: 0.1, y: 0.0,
+                        buttons: [
+                            { method: 'animate', label: '▶ Lecture', args: [null, { frame: { duration: 600, redraw: true } }] },
+                            { method: 'animate', label: '⏸ Pause', args: [[null], { mode: 'immediate' }] }
+                        ]
+                    }],
+                    sliders: [{
+                        active: 0, x: 0.2, len: 0.7, y: 0.05,
+                        steps: years.map(year => ({
+                            label: year, method: 'animate',
+                            args: [[year], { mode: 'immediate', frame: { duration: 300, redraw: true } }]
+                        }))
+                    }]
+                };
+
+                Plotly.newPlot('map-container', traces, layout).then(() => {
+                    Plotly.addFrames('map-container', frames);
+                });
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loader').innerHTML = "Erreur : Vérifiez la console (F12).";
+            }
+        }
+
+        // Cette fonction doit être à l'extérieur de init() pour être accessible par les boutons HTML
+        function switchType(index, btn) {
+            if (!globalData) return; // Sécurité si les données ne sont pas chargées
+
+            // Gère l'apparence des onglets
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            // On définit quelle trace doit être visible
+            const visibility = [false, false, false];
+            visibility[index] = true;
+
+            // On met à jour la visibilité des traces
+            Plotly.restyle('map-container', {
+                visible: visibility
+            });
+        }
+
+        init();
+    </script>
+</body>
+</html>

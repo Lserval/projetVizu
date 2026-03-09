@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard Viticole Français</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; margin: 20px; background-color: #f8f9fa; }
+        .header { text-align: center; margin-bottom: 20px; }
+        
+        /* Layout : Classement à gauche, Carte à droite */
+        .main-content { display: flex; gap: 20px; max-width: 1400px; margin: auto; align-items: flex-start; }
+        
+        /* Fenêtre du classement */
+        .ranking-container { 
+            width: 300px; background: white; padding: 20px; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 600px;
+        }
+        .ranking-container h2 { font-size: 18px; color: #b30000; border-bottom: 2px solid #ffcccc; padding-bottom: 10px; }
+        .ranking-list { list-style: none; padding: 0; margin-top: 15px; text-align: left; }
+        .ranking-item { 
+            display: flex; justify-content: space-between; padding: 8px 0; 
+            border-bottom: 1px solid #eee; font-size: 14px; 
+        }
+        .ranking-item span { font-weight: bold; color: #333; }
+
+        /* Conteneur de la carte */
+        .map-wrapper { 
+            flex-grow: 1; background: white; border-radius: 12px; 
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1); padding: 10px; padding-bottom: 60px;
+        }
+        #map-container { width: 100%; height: 600px; }
+
+        #year-display { 
+            display: block; font-size: 24px; font-weight: bold; color: #b30000;
+            background-color: #ffcccc; border: 2px solid #ff4d4d; border-radius: 8px;
+            width: 80px; text-align: center; padding: 5px 10px; margin: 20px auto 0 auto;
+        }
+
+        .tabs { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .tab-btn {
+            padding: 10px 20px; border: 2px solid #ddd; background: white;
+            cursor: pointer; border-radius: 25px; font-weight: bold; color: #666; transition: 0.3s;
+        }
+        .tab-btn.active { background-color: #ffcccc !important; border-color: #ff4d4d !important; color: #b30000 !important; }
+        #loader { text-align: center; font-style: italic; margin: 50px; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Production Viticole Française (2009-2018)</h1>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchType(0, this)">Toutes couleurs</button>
+            <button class="tab-btn" onclick="switchType(1, this)">Rouge & Rosé</button>
+            <button class="tab-btn" onclick="switchType(2, this)">Blanc</button>
+        </div>
+    </div>
+
+    <div id="loader">Chargement des données...</div>
+
+    <div class="main-content">
+        <div class="ranking-container">
+            <h2 id="ranking-title">Top 10 - Total</h2>
+            <div class="ranking-list" id="ranking-list">
+                </div>
+        </div>
+
+        <div class="map-wrapper">
+            <div id="map-container"></div>
+            <div id="year-display">2009</div>
+        </div>
+    </div>
+
+    <script>
+        const csvFile = 'production_vins_2009_2018_v2.csv';
+        const geojsonUrl = 'https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/departements-version-simplifiee.geojson';
+
+        let globalData, years, wineTypes;
+        let currentTypeIndex = 0;
+        let currentYear = "2009";
+
+        async function init() {
+            try {
+                const [data, geojson] = await Promise.all([
+                    d3.csv(csvFile),
+                    d3.json(geojsonUrl)
+                ]);
+
+                globalData = data;
+                document.getElementById('loader').style.display = 'none';
+                years = [...new Set(data.map(d => d.Year))].sort();
+                currentYear = years[0];
+                
+                wineTypes = [
+                    { label: 'Total', col: 'total_prod', colorscale: 'Viridis' },
+                    { label: 'Rouge & Rosé', col: 'tot_rougerose', colorscale: 'Reds' },
+                    { label: 'Vin Blanc', col: 'tot_blanc', colorscale: 'Tealgrn' }
+                ];
+
+                const frames = years.map(year => {
+                    const yearData = data.filter(d => d.Year === year);
+                    return {
+                        name: year,
+                        data: wineTypes.map(type => ({
+                            z: yearData.map(d => parseFloat(d[type.col]) || 0),
+                            locations: yearData.map(d => d.Dept_Code)
+                        }))
+                    };
+                });
+
+                const traces = wineTypes.map((type, i) => ({
+                    type: 'choropleth',
+                    geojson: geojson,
+                    featureidkey: 'properties.code',
+                    locations: data.filter(d => d.Year === years[0]).map(d => d.Dept_Code),
+                    z: data.filter(d => d.Year === years[0]).map(d => parseFloat(d[type.col]) || 0),
+                    text: data.filter(d => d.Year === years[0]).map(d => d.Departements),
+                    colorscale: type.colorscale,
+                    visible: i === 0,
+                    zmin: 0,
+                    zmax: 1000000,
+                    colorbar: { title: 'Hl', x: 0.9, len: 0.4, y: 0.5 },
+                    hovertemplate: `<b>%{text}</b><br>Prod: %{z:,.0f} hl<extra></extra>`
+                }));
+
+                const layout = {
+                    geo: { projection: { type: 'mercator' }, center: { lat: 46.3, lon: 2.4 }, fitbounds: "locations", showframe: false },
+                    margin: { t: 0, b: 0, l: 0, r: 0 },
+                    updatemenus: [{
+                        type: 'buttons', x: 0.05, y: -0.05, xanchor: 'left', yanchor: 'top',
+                        buttons: [
+                            { method: 'animate', label: '▶ Lecture', args: [null, { frame: { duration: 600, redraw: true }, fromcurrent: true }] },
+                            { method: 'animate', label: '⏸ Pause', args: [[null], { mode: 'immediate' }] }
+                        ]
+                    }],
+                    sliders: [{
+                        active: 0, x: 0.17, len: 0.7, y: -0.12, yanchor: 'top',
+                        currentvalue: { visible: false }, 
+                        steps: years.map(year => ({
+                            label: year, method: 'animate',
+                            args: [[year], { mode: 'immediate', frame: { duration: 300, redraw: true } }]
+                        }))
+                    }]
+                };
+
+                Plotly.newPlot('map-container', traces, layout).then(() => {
+                    Plotly.addFrames('map-container', frames);
+                    updateRanking(); // Premier affichage du classement
+                });
+
+                const gd = document.getElementById('map-container');
+                gd.on('plotly_sliderchange', function(e) {
+                    currentYear = e.step.label;
+                    document.getElementById('year-display').innerText = currentYear;
+                    updateRanking();
+                });
+
+                gd.on('plotly_animatingframe', function(e) {
+                    currentYear = e.name;
+                    document.getElementById('year-display').innerText = currentYear;
+                    updateRanking();
+                });
+
+            } catch (err) {
+                console.error(err);
+                document.getElementById('loader').innerHTML = "Erreur de chargement.";
+            }
+        }
+
+        // --- FONCTION DE MISE À JOUR DU CLASSEMENT ---
+        function updateRanking() {
+            if (!globalData) return;
+            
+            const colName = wineTypes[currentTypeIndex].col;
+            const typeLabel = wineTypes[currentTypeIndex].label;
+            
+            const topData = globalData
+                .filter(d => d.Year === currentYear)
+                // 1. On ignore la ligne TOTAUX (on vérifie si ça contient "TOT" pour être sûr)
+                .filter(d => d.Departements && !d.Departements.toUpperCase().includes("TOT"))
+                .map(d => {
+                    const fullName = d.Departements;
+                    
+                    // 2. NETTOYAGE ROBUSTE DU NOM :
+                    // Cette regex enlève au début de la ligne :
+                    // - Soit un "O" suivi de chiffres (ex: O1, O2)
+                    // - Soit des chiffres suivis de lettres (ex: 2A, 2B)
+                    // - Soit juste des chiffres (ex: 33, 10)
+                    // ... le tout suivi d'un espace.
+                    const cleanName = fullName.replace(/^[O0-9][A-Z0-9]?\s+/, '');
+                    
+                    return { 
+                        name: cleanName, 
+                        val: parseFloat(d[colName]) || 0 
+                    };
+                })
+                .sort((a, b) => b.val - a.val)
+                .slice(0, 10);
+
+            document.getElementById('ranking-title').innerText = `Top 10 - ${typeLabel}`;
+            const listContainer = document.getElementById('ranking-list');
+            listContainer.innerHTML = ""; 
+
+            topData.forEach((d, i) => {
+                const item = document.createElement('div');
+                item.className = 'ranking-item';
+                item.innerHTML = `<div class="dept-name">${i + 1}. ${d.name}</div> <div class="value">${Math.round(d.val).toLocaleString()} hl</div>`;
+                listContainer.appendChild(item);
+            });
+}
+
+        function switchType(index, btn) {
+            if (!globalData) return;
+            currentTypeIndex = index;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            
+            const visibility = [false, false, false];
+            visibility[index] = true;
+            Plotly.restyle('map-container', { visible: visibility });
+            
+            updateRanking(); // Mettre à jour le classement immédiatement
+        }
+
+        init();
+    </script>
+</body>
+</html>
