@@ -3,6 +3,12 @@
 
 Quoi: Carte de visualisation des productions de vin en France métropolitaine, par département, pour la période de 2009 à 2018
 
+Pour qui: 
+- Grand public à titre informatif
+- Secteur public: Le Ministère de l'Agriculture ou des organismes comme FranceAgriMer pour piloter les aides agricoles, anticiper les crises de surproduction ou, au contraire, les pénuries dues au gel.
+- Secteur privé: Investisseurs qui souhaitent acheter des terrains viticoles => identifier les régions les plus stables ou celles qui montent en puissance malgré le dérèglement climatique.
+
+
 Présentation du site:
 - Carte intensité de couleurs
 - Onglet par couleur de vin 
@@ -17,8 +23,4 @@ Utilisation
 Interprétation 
 - Accordéons
 
-Pour qui: 
-- Secteur public: Le Ministère de l'Agriculture ou des organismes comme FranceAgriMer. Ils utilisent ces données pour piloter les aides agricoles, anticiper les crises de surproduction ou, au contraire, les pénuries dues au gel.
-- Secteur privé: Investisseurs qui souhaitent acheter des terrains viticoles => identifier les régions les plus stables ou celles qui montent en puissance malgré le dérèglement climatique.
-Pour quoi 
-- Les négociants et les coopératives: voir l'évolution de la production et la spécialisation en couleur des  départements les aide à ajuster leurs stratégies d'achat et leurs prix.
+
